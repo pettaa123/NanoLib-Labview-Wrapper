@@ -2,7 +2,7 @@
 
 #include "pch.h"
 #include "nanolib_helper.hpp"
-
+#include <sstream>
 #include <optional>
 
 class Controller{
@@ -12,7 +12,7 @@ public:
 	~Controller();
 
 
-	int getAvailablePorts();
+	int getAvailablePorts(std::vector<std::string> &ports);
 
 private:
 	NanoLibHelper nanolibHelper;

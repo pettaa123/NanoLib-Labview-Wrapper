@@ -19,7 +19,7 @@ Controller::~Controller() {
 	}
 }
 
-int Controller::getAvailablePorts() {
+int Controller::getAvailablePorts(std::vector<std::string> &ports) {
 	try {
 		// its possible to set the logging level to a different level
 		nanolibHelper.setLoggingLevel(nlc::LogLevel::Off);
@@ -30,6 +30,15 @@ int Controller::getAvailablePorts() {
 		if (busHardwareIds.empty()) {
 			// "No hardware buses found." << std::endl;
 			return EXIT_SUCCESS;
+		}
+		int lineNum = 0;
+		// print out available hardware
+		for (const nlc::BusHardwareId& busHwId : busHardwareIds) {
+			std::stringstream ss;
+			ss << lineNum << ". " << busHwId.getName()
+				<< " protocol: " << busHwId.getProtocol() << std::endl;
+			ports.push_back(ss.str());
+			lineNum++;
 		}
 	}
 

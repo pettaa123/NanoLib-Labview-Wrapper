@@ -6,7 +6,20 @@
 
 int main()
 {
-    int succes=getPorts();
+	char* list[20];
+	for (int i = 0; i < 20; i++)
+		list[i] = new char[100];
+	
+	int success = getPorts(list,20,100);
+
+	for (int i = 0; i < 20; i++)
+		std::cout << list[i] << std::endl;
+
+
+	//free
+	for (int i = 0; i < 20; i++)
+		delete[] list[i];
+	
 }
 
 
