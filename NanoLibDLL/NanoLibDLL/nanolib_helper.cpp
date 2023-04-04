@@ -62,6 +62,10 @@ void NanoLibHelper::openBusHardware(const nlc::BusHardwareId &busHwId,
 				nanolibAccessor->openBusHardwareWithProtocol(busHwId, busHwOptions));
 }
 
+bool NanoLibHelper::isBusHardwareOpen(const nlc::BusHardwareId& busHwId) const {
+	return nanolibAccessor->isBusHardwareOpen(busHwId);
+}
+
 void NanoLibHelper::closeBusHardware(const nlc::BusHardwareId &busHwId) const {
 	checkResult("closeBusHardware", nanolibAccessor->closeBusHardware(busHwId));
 }
@@ -106,6 +110,10 @@ nlc::DeviceHandle NanoLibHelper::addDevice(const nlc::DeviceId &deviceId) const 
 
 void NanoLibHelper::connectDevice(const nlc::DeviceHandle &deviceId) const {
 	checkResult("connectDevice", nanolibAccessor->connectDevice(deviceId));
+}
+
+nlc::ResultConnectionState NanoLibHelper::getConnectionState(const nlc::DeviceHandle& deviceId) const {
+	return checkedResult("getConnectionState", nanolibAccessor->getConnectionState(deviceId));
 }
 
 void NanoLibHelper::disconnectDevice(const nlc::DeviceHandle &deviceId) const {

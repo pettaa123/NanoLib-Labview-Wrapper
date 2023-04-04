@@ -70,6 +70,9 @@ public:
 	void openBusHardware(const nlc::BusHardwareId &busHwId,
 						 const nlc::BusHardwareOptions &busHwOptions) const;
 
+	bool isBusHardwareOpen(const nlc::BusHardwareId& busHwId) const;
+
+
 	/**
 	 * @brief Closes the bus hardware (access no longer possible after that)
 	 *
@@ -107,6 +110,9 @@ public:
 	 * @param deviceId The device id to connect to
 	 */
 	void connectDevice(const nlc::DeviceHandle &deviceId) const;
+
+
+	nlc::ResultConnectionState getConnectionState(const nlc::DeviceHandle& deviceId) const;
 
 	/**
 	 * @brief Disconnects given device
