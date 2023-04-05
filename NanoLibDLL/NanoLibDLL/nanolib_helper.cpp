@@ -112,12 +112,24 @@ void NanoLibHelper::connectDevice(const nlc::DeviceHandle &deviceId) const {
 	checkResult("connectDevice", nanolibAccessor->connectDevice(deviceId));
 }
 
+nlc::DeviceId NanoLibHelper::getDeviceId(const nlc::DeviceHandle& deviceHandle) const {
+	return checkedResult("getDeviceId", nanolibAccessor->getDeviceId(deviceHandle)).getResult();
+}
+
+std::vector<nlc::DeviceId> NanoLibHelper::getDeviceIds() const {
+	return checkedResult("getDeviceIds", nanolibAccessor->getDeviceIds()).getResult();
+}
+
 nlc::ResultConnectionState NanoLibHelper::getConnectionState(const nlc::DeviceHandle& deviceId) const {
 	return checkedResult("getConnectionState", nanolibAccessor->getConnectionState(deviceId));
 }
 
 void NanoLibHelper::disconnectDevice(const nlc::DeviceHandle &deviceId) const {
 	checkResult("disconnectDevice", nanolibAccessor->disconnectDevice(deviceId));
+}
+
+void NanoLibHelper::removeDevice(const nlc::DeviceHandle& deviceId) const {
+	checkResult("removeDevice", nanolibAccessor->removeDevice(deviceId));
 }
 
 int64_t NanoLibHelper::readInteger(const nlc::DeviceHandle &deviceId,

@@ -100,7 +100,7 @@ int Controller::scanBus(std::vector<std::string>& devices) {
 			return EXIT_FAILURE;
 		}
 		// Scan the bus for available devices
-		std::vector<nlc::DeviceId> deviceIds = nanolibHelper.scanBus(openedBusHardware.value());
+		std::vector<nlc::DeviceId> deviceIds = nanolibHelper.scanBus(*openedBusHardware);
 
 		for (int i = 0; i < deviceIds.size(); i++) {
 			std::stringstream ss;
@@ -116,74 +116,50 @@ int Controller::scanBus(std::vector<std::string>& devices) {
 	}
 }
 
-int Controller::connectDevice(unsigned int deviceToOpen) {
+int Controller::autoSetupMotPams(unsigned int deviceToOpen) {
 	try {
-		if (!openedBusHardware.has_value() || connectedDeviceHandle.has_value()) {
+		if (!openedBusHardware.has_value()) {
 			//"Closing the hardware bus."
 			//return EXIT_FAILURE;
 			return 9;
 		}
-		std::vector<nlc::DeviceId> deviceIds = nanolibHelper.scanBus(openedBusHardware.value());
-		// Use selected device. 
-		// We could also create device id manually, as follows: 
-		// nlc::DeviceId deviceId = nlc::DeviceId(busHwId, 1, "");
-		nlc::DeviceId deviceId = deviceIds[deviceToOpen];
-
-		// Register the device id
-		nlc::DeviceHandle deviceHandle = nanolibHelper.addDevice(deviceId);
-
-		// Establishing a connection with the device
-		nanolibHelper.connectDevice(deviceHandle);
-		connectedDeviceHandle = deviceHandle;
-		permConnectedDeviceHandle = deviceHandle;
-
-		nlc::DeviceConnectionStateInfo cs = nanolibHelper.getConnectionState(*connectedDeviceHandle).getResult();
-		nlc::DeviceConnectionStateInfo cs2 = nanolibHelper.getConnectionState(permConnectedDeviceHandle).getResult();
-		DBOUT("exception: " << connectedDeviceHandle->toString().c_str() << " : " << (int)cs << permConnectedDeviceHandle.toString().c_str() <<" : " << (int)cs2);
-		// Now we are ready to work with the controller.
-
-		return EXIT_SUCCESS;
-	}
-
-	catch (const nanolib_exception& e) {
-		//"Error occurred e.what();
-		DBOUT("exception: " << e.what());
-		return EXIT_FAILURE;
-	}
-}
-
-int Controller::autoSetupMotPams() {
-	try {
-		if (!connectedDeviceHandle.has_value()) {
-			return EXIT_FAILURE;
-		}
 
 		uint16_t uWord16;
 		uint32_t uWord32;
-		DBOUT("exception: " << connectedDeviceHandle->toString().c_str() << " : " << permConnectedDeviceHandle.toString().c_str());
-		nlc::DeviceConnectionStateInfo cs = nanolibHelper.getConnectionState(*connectedDeviceHandle).getResult();
-		nlc::DeviceConnectionStateInfo cs2 = nanolibHelper.getConnectionState(permConnectedDeviceHandle).getResult();
-		DBOUT("exception: " << connectedDeviceHandle->toString().c_str() << " : " << (int)cs << permConnectedDeviceHandle.toString().c_str() << " : " << (int)cs2);
 		
-		DBOUT("exception: " << (int)cs);
-		//Motor Stop (0x6040-0)
-		nanolibHelper.writeInteger(permConnectedDeviceHandle, 6, nlc::OdIndex(0x6040, 0x00), 16);
-		//write polpaarzahl
-		nanolibHelper.writeInteger(*connectedDeviceHandle, 50, nlc::OdIndex(0x2030, 0x00), 32);
-		// write motorstrom
-		nanolibHelper.writeInteger(*connectedDeviceHandle, 1000, nlc::OdIndex(0x2031, 0x00), 32);
+		//nlc::BusHardwareId busHwId = openedBusHardware;
+		nlc::DeviceId deviceId = nlc::DeviceId(*openedBusHardware, deviceToOpen, "");
+		std::vector<nlc::DeviceId> deviceIds = nanolibHelper.scanBus(openedBusHardware.value());
+		if(deviceToOpen >= deviceIds.size()) {
+			//Invalid bus hardware number."
+			return EXIT_FAILURE;
+		}
+		
+		// Register the device id
+		nlc::DeviceHandle deviceHandle = nanolibHelper.addDevice(deviceIds[deviceToOpen]);
+		// Establishing a connection with the device
+		nanolibHelper.connectDevice(deviceHandle);
 
-		uWord32 = static_cast<uint32_t>(nanolibHelper.readInteger(*connectedDeviceHandle, nlc::OdIndex(0x3202, 0x00)));
+		connectedDeviceHandle = deviceHandle;
+
+		//Motor Stop (0x6040-0)
+		nanolibHelper.writeInteger(deviceHandle, 6, nlc::OdIndex(0x6040, 0x00), 16);
+		//write polpaarzahl
+		nanolibHelper.writeInteger(deviceHandle, 50, nlc::OdIndex(0x2030, 0x00), 32);
+		// write motorstrom
+		nanolibHelper.writeInteger(deviceHandle, 1000, nlc::OdIndex(0x2031, 0x00), 32);
+
+		uWord32 = static_cast<uint32_t>(nanolibHelper.readInteger(deviceHandle, nlc::OdIndex(0x3202, 0x00)));
 		// set open loop mode
 		uWord32 &= ~(1UL << 0);
 		//set current reduction
 		uWord32 |= 1UL << 3;
-		nanolibHelper.writeInteger(*connectedDeviceHandle, uWord32, nlc::OdIndex(0x3202, 0x00), 32);
+		nanolibHelper.writeInteger(deviceHandle, uWord32, nlc::OdIndex(0x3202, 0x00), 32);
 
 		//Parameter Ermittlung
-		nanolibHelper.writeInteger(*connectedDeviceHandle, -2, nlc::OdIndex(0x6060, 0x00), 8);
+		nanolibHelper.writeInteger(deviceHandle, -2, nlc::OdIndex(0x6060, 0x00), 8);
 		//sm to operation enabled
-		uWord16 = static_cast<uint16_t>(nanolibHelper.readInteger(*connectedDeviceHandle, nlc::OdIndex(0x6041, 0x00)));
+		uWord16 = static_cast<uint16_t>(nanolibHelper.readInteger(deviceHandle, nlc::OdIndex(0x6041, 0x00)));
 		//Ready to switch on?
 		if (
 			((uWord16 >> 0) & 1U) == 1 &&
@@ -194,27 +170,30 @@ int Controller::autoSetupMotPams() {
 			((uWord16 >> 6) & 1U) == 0
 			) {
 			//switch on
-			nanolibHelper.writeInteger(*connectedDeviceHandle, 7, nlc::OdIndex(0x6040, 0x00), 16);
+			nanolibHelper.writeInteger(deviceHandle, 7, nlc::OdIndex(0x6040, 0x00), 16);
 			// operation enabled
-			nanolibHelper.writeInteger(*connectedDeviceHandle, 15, nlc::OdIndex(0x6040, 0x00), 16);
+			nanolibHelper.writeInteger(deviceHandle, 15, nlc::OdIndex(0x6040, 0x00), 16);
 		}
 		//start auto-setup
-		uWord16 = static_cast<uint16_t>(nanolibHelper.readInteger(*connectedDeviceHandle, nlc::OdIndex(0x6040, 0x00)));
+		uWord16 = static_cast<uint16_t>(nanolibHelper.readInteger(deviceHandle, nlc::OdIndex(0x6040, 0x00)));
 		uWord16 |= 1UL << 4;
-		nanolibHelper.writeInteger(*connectedDeviceHandle, uWord16, nlc::OdIndex(0x6040, 0x00), 16);
+		nanolibHelper.writeInteger(deviceHandle, uWord16, nlc::OdIndex(0x6040, 0x00), 16);
 		//wait till its done
 		using namespace std::chrono_literals; // ns, us, ms, s, h, etc.
 
 		do {
 			uWord16 = static_cast<uint16_t>(
-				nanolibHelper.readInteger(*connectedDeviceHandle, nlc::OdIndex(0x6041, 0x00)));
-			//Auto Setup running
+				nanolibHelper.readInteger(deviceHandle, nlc::OdIndex(0x6041, 0x00)));
+			DBOUT("Auto Setup running"); 
 			std::this_thread::sleep_for(100ns);
 		} while (
 			((uWord16 >> 12) & 1U) == 0);
 
 		uWord16 = 0;
-		nanolibHelper.writeInteger(*connectedDeviceHandle, uWord16, nlc::OdIndex(0x6040, 0x00), 16);
+		nanolibHelper.writeInteger(deviceHandle, uWord16, nlc::OdIndex(0x6040, 0x00), 16);
+
+		nanolibHelper.disconnectDevice(deviceHandle);
+		nanolibHelper.removeDevice(deviceHandle);
 
 		return EXIT_SUCCESS;
 	}

@@ -25,7 +25,7 @@ int getPorts(char** list, int rows, int cols) {
 MgErr getPortsLV(void **cPtr, LStrArrayHdl *arr) {
 	MgErr err=0;
 
-	if (!(intptr_t)*cPtr) {
+	if (!(uintptr_t)*cPtr) {
 		*cPtr = new Controller();
 	}
 	Controller* c = static_cast<Controller*>(*cPtr);
@@ -47,7 +47,7 @@ MgErr getPortsLV(void **cPtr, LStrArrayHdl *arr) {
 
 MgErr openPortLV(void **cPtr, unsigned int portToOpen) {
 	MgErr err=0;
-	if (!(intptr_t)*cPtr) {
+	if (!(uintptr_t)*cPtr) {
 		*cPtr = new Controller();
 
 	}
@@ -64,7 +64,7 @@ MgErr openPortLV(void **cPtr, unsigned int portToOpen) {
 
 MgErr scanBusLV(void** cPtr, LStrArrayHdl* LVAllocatedStrArray) {
 	MgErr err = 0;
-	if (!(intptr_t)*cPtr) {
+	if (!(uintptr_t)*cPtr) {
 		*cPtr = new Controller();
 	}
 	Controller* c = static_cast<Controller*>(*cPtr);
@@ -72,61 +72,16 @@ MgErr scanBusLV(void** cPtr, LStrArrayHdl* LVAllocatedStrArray) {
 	err = c->scanBus(devices);
 	if (err == EXIT_SUCCESS)
 		err = vecStrToLVStrArr(devices, LVAllocatedStrArray);
-
 	if (err) {
 		delete c;
 		c = NULL;
 	}
 
-	return err;
-}
-
-MgErr connectDevice(void **cPtr, unsigned int deviceToOpen) {
-	MgErr err=0;
-	if (!(intptr_t)*cPtr) {
-		*cPtr = new Controller();
-	}
-
-	Controller* c = static_cast<Controller*>(*cPtr);
-	std::vector<std::string> devices;
-	
-	err = c->connectDevice(deviceToOpen);
-	if (err) {
-		delete c;
-		c = NULL;
-	}
-	return err;
-}
-
-MgErr closePortLV(void **cPtr) {
-	MgErr err=0;
-	if (!(intptr_t)*cPtr) {
-		Controller* c = static_cast<Controller*>(*cPtr);
-		delete c;
-	}
-	*cPtr = NULL;
-	return err;
-}
-
-MgErr autoSetupMotPams(void** cPtr) {
-	MgErr err = 0;
-	if (!(intptr_t)*cPtr) {
-		*cPtr = new Controller();
-	}
-	Controller* c = static_cast<Controller*>(*cPtr);
-
-	err=c->autoSetupMotPams();
-	
-	if (err) {
-		delete c;
-		c = NULL;
-	}
-	
 	return err;
 }
 
 MgErr vecStrToLVStrArr(const std::vector<std::string>& s, LStrArrayHdl* arr) {
-	MgErr err=0;
+	MgErr err = 0;
 	/* If the incoming array is bigger than what we need, we first need to loop through
 	the superfluous items to see if they contain valid string handles and if so we
 	need to deallocate them to avoid memory leaks */
@@ -162,3 +117,30 @@ MgErr vecStrToLVStrArr(const std::vector<std::string>& s, LStrArrayHdl* arr) {
 	}
 	return err;
 }
+
+MgErr closePortLV(void **cPtr) {
+	MgErr err=0;
+	if (!(uintptr_t)*cPtr) {
+		Controller* c = static_cast<Controller*>(*cPtr);
+		delete c;
+	}
+	*cPtr = NULL;
+	return err;
+}
+
+MgErr autoSetupMotPams(void** cPtr, unsigned int deviceToOpen) {
+	MgErr err = 0;
+	if (!(uintptr_t)*cPtr) {
+		*cPtr = new Controller();
+	}
+	Controller* c = static_cast<Controller*>(*cPtr);
+	err=c->autoSetupMotPams(deviceToOpen);
+	
+	if (err) {
+		delete c;
+		c = NULL;
+	}
+	
+	return err;
+}
+

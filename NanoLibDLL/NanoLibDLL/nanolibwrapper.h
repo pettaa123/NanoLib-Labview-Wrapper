@@ -37,9 +37,7 @@ extern "C" NANOLIBDLL_API MgErr openPortLV(void **controllerPtr, unsigned int po
 
 extern "C" NANOLIBDLL_API MgErr scanBusLV(void** controllerPtr, LStrArrayHdl * LVAllocatedStrArray);
 
-extern "C" NANOLIBDLL_API MgErr connectDevice(void **controllerPtr, unsigned int deviceToOpen);
-
-extern "C" NANOLIBDLL_API MgErr autoSetupMotPams(void** controllerPtr);
+extern "C" NANOLIBDLL_API MgErr autoSetupMotPams(void** controllerPtr, unsigned int deviceToOpen);
 
 extern "C" NANOLIBDLL_API MgErr closePortLV(void **controllerPtr);
 

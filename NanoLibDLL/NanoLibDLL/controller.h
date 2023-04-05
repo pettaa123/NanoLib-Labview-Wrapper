@@ -15,14 +15,18 @@ public:
 	int getAvailablePorts(std::vector<std::string> &ports);
 	int openPort(unsigned int portToOpen);
 	int scanBus(std::vector<std::string>& devices);
-	int connectDevice(unsigned int deviceToOpen);
-	int autoSetupMotPams();
+	int autoSetupMotPams(unsigned int deviceToOpen);
+
 
 private:
+	//struct MyOpenedBusHardware {
+	//	nlc::BusHardwareId value;
+	//	bool isSet=false;
+	//};
+	//MyOpenedBusHardware openedBusHardware;
 	NanoLibHelper nanolibHelper;
 	std::optional<nlc::BusHardwareId> openedBusHardware;
 	std::optional<nlc::DeviceHandle> connectedDeviceHandle;
-	nlc::DeviceHandle permConnectedDeviceHandle;
 
 };
 

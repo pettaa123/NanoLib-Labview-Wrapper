@@ -112,6 +112,10 @@ public:
 	void connectDevice(const nlc::DeviceHandle &deviceId) const;
 
 
+	std::vector<nlc::DeviceId> getDeviceIds() const;
+
+	nlc::DeviceId getDeviceId(const nlc::DeviceHandle& deviceHandle) const;
+
 	nlc::ResultConnectionState getConnectionState(const nlc::DeviceHandle& deviceId) const;
 
 	/**
@@ -123,6 +127,8 @@ public:
 	 * @param deviceId
 	 */
 	void disconnectDevice(const nlc::DeviceHandle &deviceId) const;
+
+	void removeDevice(const nlc::DeviceHandle& deviceId) const;
 
 	/**
 	 * @brief Reads out an integer of given device
