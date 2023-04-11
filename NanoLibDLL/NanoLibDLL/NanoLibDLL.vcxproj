@@ -175,13 +175,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="controller.h" />
+    <ClInclude Include="DataTypes.h" />
+    <ClInclude Include="Fault.h" />
     <ClInclude Include="nanolibwrapper.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="nanolib_helper.hpp" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="powerSM.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="controller.cpp" />
+    <ClCompile Include="Fault.cpp" />
     <ClCompile Include="nanolibwrapper.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="nanolib_helper.cpp" />
@@ -191,6 +195,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="powerSM.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

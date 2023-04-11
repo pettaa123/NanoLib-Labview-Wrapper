@@ -4,6 +4,7 @@
 #include "nanolib_helper.hpp"
 #include <sstream>
 #include <optional>
+#include <vector>
 
 class Controller{
 public:
@@ -11,11 +12,20 @@ public:
 	Controller();
 	~Controller();
 
-
 	int getAvailablePorts(std::vector<std::string> &ports);
-	int openPort(unsigned int portToOpen);
+	int openPort(UINT portToOpen);
+	int connectDevice(UINT deviceToOpen);
 	int scanBus(std::vector<std::string>& devices);
-	int autoSetupMotPams(unsigned int deviceToOpen);
+	int autoSetupMotPams();
+	int home();
+	int moveToPosition(INT32 zehntelMM);
+	int moveVelocity(INT16 rpm);
+	//behaviour: 2=quickstop 1=slow down ramp
+	int halt(UINT stopMode=2);
+	int stop();
+	//spindelsteigung 
+	int setFeedConstant(UINT32 pitchZehntelMM);
+	int setProfileVelocity(UINT32 rpm);
 
 
 private:
@@ -28,14 +38,10 @@ private:
 	std::optional<nlc::BusHardwareId> openedBusHardware;
 	std::optional<nlc::DeviceHandle> connectedDeviceHandle;
 
+	int disconnectDevice();
+	int getFirmwareVersion(std::string &version);
+	int readDigitalInputs(UINT8& states);
+	int configureInputs();
 };
 
-#include <Windows.h>
-#include <iostream>
-#define DBOUT( s )            \
-{                             \
-   std::wostringstream os_;    \
-   os_ << s;                   \
-   OutputDebugStringW( os_.str().c_str() );  \
-}
 

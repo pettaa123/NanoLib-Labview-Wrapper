@@ -45,7 +45,7 @@ MgErr getPortsLV(void **cPtr, LStrArrayHdl *arr) {
 	return err;
 }
 
-MgErr openPortLV(void **cPtr, unsigned int portToOpen) {
+MgErr openPort(void **cPtr, unsigned int portToOpen) {
 	MgErr err=0;
 	if (!(uintptr_t)*cPtr) {
 		*cPtr = new Controller();
@@ -77,6 +77,40 @@ MgErr scanBusLV(void** cPtr, LStrArrayHdl* LVAllocatedStrArray) {
 		c = NULL;
 	}
 
+	return err;
+}
+
+MgErr connectDevice(void** cPtr, unsigned int deviceToOpen) {
+	MgErr err = 0;
+	if (!(uintptr_t)*cPtr) {
+		*cPtr = new Controller();
+
+	}
+	Controller* c = static_cast<Controller*>(*cPtr);
+
+	err = c->connectDevice(deviceToOpen);
+
+	if (err) {
+		delete c;
+		c = NULL;
+	}
+	return err;
+}
+
+MgErr home(void** cPtr) {
+	MgErr err = 0;
+	if (!(uintptr_t)*cPtr) {
+		*cPtr = new Controller();
+
+	}
+	Controller* c = static_cast<Controller*>(*cPtr);
+
+	err = c->home();
+
+	if (err) {
+		delete c;
+		c = NULL;
+	}
 	return err;
 }
 
@@ -134,13 +168,29 @@ MgErr autoSetupMotPams(void** cPtr, unsigned int deviceToOpen) {
 		*cPtr = new Controller();
 	}
 	Controller* c = static_cast<Controller*>(*cPtr);
-	err=c->autoSetupMotPams(deviceToOpen);
+	err=c->autoSetupMotPams();
 	
 	if (err) {
 		delete c;
 		c = NULL;
 	}
 	
+	return err;
+}
+
+MgErr moveToDeciMM(void** cPtr, unsigned int deviceToOpen, int deciMM) {
+	MgErr err = 0;
+	if (!(uintptr_t)*cPtr) {
+		*cPtr = new Controller();
+	}
+	Controller* c = static_cast<Controller*>(*cPtr);
+	err = c->moveToPosition(deciMM);
+
+	if (err) {
+		delete c;
+		c = NULL;
+	}
+
 	return err;
 }
 
