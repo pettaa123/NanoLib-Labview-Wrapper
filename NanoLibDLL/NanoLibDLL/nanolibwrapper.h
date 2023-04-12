@@ -39,9 +39,15 @@ extern "C" NANOLIBDLL_API MgErr scanBusLV(void** controllerPtr, LStrArrayHdl * L
 
 extern "C" NANOLIBDLL_API MgErr connectDevice(void** controllerPtr, unsigned int deviceToOpen);
 
+extern "C" NANOLIBDLL_API MgErr stop(void** controllerPtr);
+
 extern "C" NANOLIBDLL_API MgErr autoSetupMotPams(void** controllerPtr);
 
 extern "C" NANOLIBDLL_API MgErr home(void** controllerPtr);
+
+extern "C" NANOLIBDLL_API MgErr setFeedConstant(void** controllerPtr,unsigned int pitchZehntelMM);
+
+extern "C" NANOLIBDLL_API MgErr setRPM(void** controllerPtr,short rpm);
 
 extern "C" NANOLIBDLL_API MgErr moveToDeciMM(void** controllerPtr, int deciMM);
 

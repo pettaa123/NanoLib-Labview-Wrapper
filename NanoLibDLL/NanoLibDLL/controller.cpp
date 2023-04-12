@@ -148,19 +148,12 @@ int Controller::moveToPosition(INT32 zehntelMM) {
 			return EXIT_FAILURE;
 		//go
 		uWord16 = static_cast<UINT16>(nanolibHelper.readInteger(*connectedDeviceHandle, nlc::OdIndex(0x6040, 0x00)));
-		DBOUT("\n")
-		DBOUT(uWord16)
+		//reset bit 4
 		uWord16 &= ~(1U << 4);
 		uWord16 &= ~(1U << 8);
-		DBOUT("\n")
-		DBOUT(uWord16)
 		nanolibHelper.writeInteger(*connectedDeviceHandle, uWord16, nlc::OdIndex(0x6040, 0x00), 16);
 		uWord16 = static_cast<UINT16>(nanolibHelper.readInteger(*connectedDeviceHandle, nlc::OdIndex(0x6040, 0x00)));
-		DBOUT("\n")
-		DBOUT(uWord16)
 		uWord16 |= 1U << 4;
-		DBOUT("\n")
-		DBOUT(uWord16)
 		nanolibHelper.writeInteger(*connectedDeviceHandle, uWord16, nlc::OdIndex(0x6040, 0x00), 16);
 
 	}
@@ -169,7 +162,7 @@ int Controller::moveToPosition(INT32 zehntelMM) {
 		DBOUT("exception: " << e.what());
 		return EXIT_FAILURE;
 	}
-	EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
 
 int Controller::setFeedConstant( UINT32 pitchZehntelMM) {
@@ -295,11 +288,7 @@ int Controller::home() {
 			return EXIT_FAILURE;
 		//go
 		uWord16 = static_cast<UINT16>(nanolibHelper.readInteger(*connectedDeviceHandle, nlc::OdIndex(0x6040, 0x00)));
-		DBOUT(uWord16);
-		DBOUT("\n");
 		uWord16 |= 1U << 4;
-		DBOUT(uWord16);
-		DBOUT("\n");
 		nanolibHelper.writeInteger(*connectedDeviceHandle, uWord16, nlc::OdIndex(0x6040, 0x00), 16);
 	}
 	catch (const nanolib_exception& e) {
@@ -352,7 +341,6 @@ int Controller::disconnectDevice() {
 		nanolibHelper.disconnectDevice(*connectedDeviceHandle);
 		nanolibHelper.removeDevice(*connectedDeviceHandle);
 		connectedDeviceHandle.reset();
-		DBOUT("disconnected\n")
 	}
 	catch (const nanolib_exception& e) {
 		//"Error occurred e.what();
@@ -366,11 +354,8 @@ int Controller::disconnectDevice() {
 int Controller::connectDevice(UINT deviceToOpen) {
 	try {
 		if (!openedBusHardware.has_value()) {
-			//"Closing the hardware bus."
-			//return EXIT_FAILURE;
-			return 9;
+			return EXIT_FAILURE;
 		}
-		//nlc::BusHardwareId busHwId = openedBusHardware;
 		nlc::DeviceId deviceId = nlc::DeviceId(*openedBusHardware, deviceToOpen, "");
 		std::vector<nlc::DeviceId> deviceIds = nanolibHelper.scanBus(openedBusHardware.value());
 		if (deviceToOpen >= deviceIds.size()) {

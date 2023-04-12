@@ -38,8 +38,7 @@ MgErr getPortsLV(void **cPtr, LStrArrayHdl *arr) {
 	err = vecStrToLVStrArr(ports, arr);
 
 	if (err) {
-		delete c;
-		c = NULL;
+		closePortLV(cPtr);
 	}
 	
 	return err;
@@ -56,8 +55,7 @@ MgErr openPort(void **cPtr, unsigned int portToOpen) {
 	err=c->openPort(portToOpen);	
 
 	if (err) {
-		delete c;
-		c = NULL;
+		closePortLV(cPtr);
 	}
 	return err;
 }
@@ -73,8 +71,7 @@ MgErr scanBusLV(void** cPtr, LStrArrayHdl* LVAllocatedStrArray) {
 	if (err == EXIT_SUCCESS)
 		err = vecStrToLVStrArr(devices, LVAllocatedStrArray);
 	if (err) {
-		delete c;
-		c = NULL;
+		closePortLV(cPtr);
 	}
 
 	return err;
@@ -82,17 +79,17 @@ MgErr scanBusLV(void** cPtr, LStrArrayHdl* LVAllocatedStrArray) {
 
 MgErr connectDevice(void** cPtr, unsigned int deviceToOpen) {
 	MgErr err = 0;
+	std::cout << err << std::endl;
 	if (!(uintptr_t)*cPtr) {
 		*cPtr = new Controller();
-
 	}
 	Controller* c = static_cast<Controller*>(*cPtr);
-
+	std::cout << c << std::endl;
 	err = c->connectDevice(deviceToOpen);
-
+	std::cout << err << std::endl;
 	if (err) {
-		delete c;
-		c = NULL;
+		std::cout << err << std::endl;
+		closePortLV(cPtr);
 	}
 	return err;
 }
@@ -108,8 +105,23 @@ MgErr home(void** cPtr) {
 	err = c->home();
 
 	if (err) {
-		delete c;
-		c = NULL;
+		closePortLV(cPtr);
+	}
+	return err;
+}
+
+MgErr stop(void** cPtr) {
+	MgErr err = 0;
+	if (!(uintptr_t)*cPtr) {
+		*cPtr = new Controller();
+
+	}
+	Controller* c = static_cast<Controller*>(*cPtr);
+
+	err = c->stop();
+
+	if (err) {
+		closePortLV(cPtr);
 	}
 	return err;
 }
@@ -162,7 +174,7 @@ MgErr closePortLV(void **cPtr) {
 	return err;
 }
 
-MgErr autoSetupMotPams(void** cPtr, unsigned int deviceToOpen) {
+MgErr autoSetupMotPams(void** cPtr) {
 	MgErr err = 0;
 	if (!(uintptr_t)*cPtr) {
 		*cPtr = new Controller();
@@ -171,24 +183,53 @@ MgErr autoSetupMotPams(void** cPtr, unsigned int deviceToOpen) {
 	err=c->autoSetupMotPams();
 	
 	if (err) {
-		delete c;
-		c = NULL;
+		closePortLV(cPtr);
 	}
 	
 	return err;
 }
 
-MgErr moveToDeciMM(void** cPtr, unsigned int deviceToOpen, int deciMM) {
+MgErr setRPM(void** cPtr,short rpm) {
 	MgErr err = 0;
 	if (!(uintptr_t)*cPtr) {
 		*cPtr = new Controller();
 	}
 	Controller* c = static_cast<Controller*>(*cPtr);
+	err = c->setProfileVelocity(rpm);
+
+	if (err) {
+		closePortLV(cPtr);
+	}
+
+	return err;
+}
+
+MgErr setFeedConstant(void** cPtr, unsigned int pitchZehntelMM) {
+	MgErr err = 0;
+	if (!(uintptr_t)*cPtr) {
+		*cPtr = new Controller();
+	}
+	Controller* c = static_cast<Controller*>(*cPtr);
+	err = c->setFeedConstant(pitchZehntelMM);
+
+	if (err) {
+		closePortLV(cPtr);
+	}
+
+	return err;
+}
+
+MgErr moveToDeciMM(void** cPtr, int deciMM) {
+	MgErr err = 0;
+	if (!(uintptr_t)*cPtr) {
+		*cPtr = new Controller();
+	}
+	Controller* c = static_cast<Controller*>(*cPtr);
+	std::cout << deciMM << std::endl;
 	err = c->moveToPosition(deciMM);
 
 	if (err) {
-		delete c;
-		c = NULL;
+		closePortLV(cPtr);
 	}
 
 	return err;
