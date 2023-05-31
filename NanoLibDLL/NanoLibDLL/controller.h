@@ -17,7 +17,7 @@ public:
 	int connectDevice(UINT deviceToOpen);
 	int scanBus(std::vector<std::string>& devices);
 	int autoSetupMotPams();
-	int home();
+	int home(UINT32 rpm);
 	int moveToPosition(INT32 zehntelMM);
 	int moveVelocity(INT16 rpm);
 	//behaviour: 2=quickstop 1=slow down ramp
@@ -26,7 +26,9 @@ public:
 	//spindelsteigung 
 	int setFeedConstant(UINT32 pitchZehntelMM);
 	int setProfileVelocity(UINT32 rpm);
-
+	int setMaxMotorCurrent(INT32 maxCurrent);
+	int setProfileAcceleration(UINT32 acc);
+	int setHomingAcceleration(UINT32 acc);
 
 private:
 	//struct MyOpenedBusHardware {

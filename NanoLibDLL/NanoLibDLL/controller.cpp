@@ -10,6 +10,13 @@ Controller::Controller() {
 
 Controller::~Controller() {
 
+	stop();
+
+
+	//make sure operation is disabled before changing user defined units
+	PowerSM powerSM(nanolibHelper, openedBusHardware.value(), connectedDeviceHandle.value());
+	powerSM.disableOperation();
+	
 	// Always finalize connected hardware
 
 	if (connectedDeviceHandle.has_value()) {
@@ -207,10 +214,59 @@ int Controller::setProfileVelocity(UINT32 rpm) {
 		if (powerSM.disableOperation())
 			return EXIT_FAILURE;
 
-		uint32_t uWord32;
-
 		//set profile velocity
 		nanolibHelper.writeInteger(*connectedDeviceHandle, rpm, nlc::OdIndex(0x6081, 0x00), 32);
+	}
+	catch (const nanolib_exception& e) {
+		//"Error occurred e.what();
+		DBOUT("exception: " << e.what());
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
+}
+
+
+int Controller::setProfileAcceleration(UINT32 acc) {
+	try {
+		if (!openedBusHardware.has_value() || !connectedDeviceHandle.has_value()) {
+			//"Closing the hardware bus."
+			return EXIT_FAILURE;
+		}
+
+		if (acc < 1 || acc > 10000)
+			return EXIT_FAILURE;
+
+		PowerSM powerSM(nanolibHelper, openedBusHardware.value(), connectedDeviceHandle.value());
+		if (powerSM.disableOperation())
+			return EXIT_FAILURE;
+
+		//set profile acceleration
+		nanolibHelper.writeInteger(*connectedDeviceHandle, acc, nlc::OdIndex(0x6083, 0x00), 32);
+	}
+	catch (const nanolib_exception& e) {
+		//"Error occurred e.what();
+		DBOUT("exception: " << e.what());
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
+}
+
+int Controller::setHomingAcceleration(UINT32 acc) {
+	try {
+		if (!openedBusHardware.has_value() || !connectedDeviceHandle.has_value()) {
+			//"Closing the hardware bus."
+			return EXIT_FAILURE;
+		}
+
+		if (acc < 1 || acc > 1000)
+			return EXIT_FAILURE;
+
+		PowerSM powerSM(nanolibHelper, openedBusHardware.value(), connectedDeviceHandle.value());
+		if (powerSM.disableOperation())
+			return EXIT_FAILURE;
+
+		//set homing acceleration
+		nanolibHelper.writeInteger(*connectedDeviceHandle, acc, nlc::OdIndex(0x609A, 0x00), 32);
 	}
 	catch (const nanolib_exception& e) {
 		//"Error occurred e.what();
@@ -260,7 +316,7 @@ int Controller::stop() {
 	return EXIT_SUCCESS;
 }
 
-int Controller::home() {
+int Controller::home(UINT32 rpm) {
 	try {
 		if (!openedBusHardware.has_value() || !connectedDeviceHandle.has_value()) {
 			//"Closing the hardware bus."
@@ -269,7 +325,6 @@ int Controller::home() {
 
 		UINT16 uWord16;
 
-		//make sure operation is disabled before changing user defined units
 		PowerSM powerSM(nanolibHelper, openedBusHardware.value(), connectedDeviceHandle.value());
 		if (powerSM.disableOperation())
 			return EXIT_FAILURE;
@@ -281,6 +336,8 @@ int Controller::home() {
 		//Mode of operation to Homing
 		nanolibHelper.writeInteger(*connectedDeviceHandle, 6, nlc::OdIndex(0x6060, 0x00), 8);
 
+		//set homing speed to rpm (Speed During Search For Switch)
+		nanolibHelper.writeInteger(*connectedDeviceHandle, rpm, nlc::OdIndex(0x6099, 0x01), 32);
 
 		//reference is negative end switch method 17
 		nanolibHelper.writeInteger(*connectedDeviceHandle, 17, nlc::OdIndex(0x6098, 0x00), 8);
@@ -362,13 +419,40 @@ int Controller::connectDevice(UINT deviceToOpen) {
 			//Invalid bus hardware number."
 			return EXIT_FAILURE;
 		}
-
+		nlc::DeviceHandle deviceHandle;
 		// Register the device id
-		nlc::DeviceHandle deviceHandle = nanolibHelper.addDevice(deviceIds[deviceToOpen]);
+		deviceHandle = nanolibHelper.addDevice(deviceIds[deviceToOpen]);
+
+		//How do I get deviceHandle of already existing device?
 		// Establishing a connection with the device
 		nanolibHelper.connectDevice(deviceHandle);
 
 		connectedDeviceHandle = deviceHandle;
+
+	}
+	catch (const nanolib_exception& e) {
+		//"Error occurred e.what();
+		DBOUT("exception: " << e.what());
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int Controller::setMaxMotorCurrent(INT32 maxCurrent) {
+	try {
+		if (!openedBusHardware.has_value()) {
+			return EXIT_FAILURE;
+		}
+		if(maxCurrent < 1 || maxCurrent > 2500)
+			return EXIT_FAILURE;
+
+		PowerSM powerSM(nanolibHelper, openedBusHardware.value(), connectedDeviceHandle.value());
+		if (powerSM.disableOperation())
+			return EXIT_FAILURE;
+
+		// write motorstrom
+		nanolibHelper.writeInteger(*connectedDeviceHandle, maxCurrent, nlc::OdIndex(0x2031, 0x00), 32);
 
 	}
 	catch (const nanolib_exception& e) {
@@ -395,7 +479,11 @@ int Controller::autoSetupMotPams() {
 		//write polpaarzahl
 		nanolibHelper.writeInteger(*connectedDeviceHandle, 50, nlc::OdIndex(0x2030, 0x00), 32);
 		// write motorstrom
-		nanolibHelper.writeInteger(*connectedDeviceHandle, 1000, nlc::OdIndex(0x2031, 0x00), 32);
+		nanolibHelper.writeInteger(*connectedDeviceHandle, 2000, nlc::OdIndex(0x2031, 0x00), 32);
+
+		//enable reference switches, set inputs to 24V range
+		if (configureInputs())
+			return EXIT_FAILURE;
 
 		uWord32 = static_cast<uint32_t>(nanolibHelper.readInteger(*connectedDeviceHandle, nlc::OdIndex(0x3202, 0x00)));
 		// set open loop mode
@@ -416,12 +504,19 @@ int Controller::autoSetupMotPams() {
 		nanolibHelper.writeInteger(*connectedDeviceHandle, uWord16, nlc::OdIndex(0x6040, 0x00), 16);
 		//wait till its done
 		using namespace std::chrono_literals; // ns, us, ms, s, h, etc.
+		
+		uint16_t iterationsDone = 0;
+		uint16_t maxIterations = 3000;
 
 		do {
 			uWord16 = static_cast<uint16_t>(
 				nanolibHelper.readInteger(*connectedDeviceHandle, nlc::OdIndex(0x6041, 0x00)));
-			DBOUT("Auto Setup running");
-			std::this_thread::sleep_for(100ns);
+			DBOUT("Auto Setup running\n");
+			std::this_thread::sleep_for(10ms);
+			iterationsDone += 1;
+			if (iterationsDone == maxIterations) {
+				return EXIT_FAILURE;
+			}
 		} while (
 			((uWord16 >> 12) & 1U) == 0);
 
@@ -462,10 +557,23 @@ int Controller::configureInputs() {
 			//"Closing the hardware bus."
 			return EXIT_FAILURE;
 		}
-		//set digital inputs to range 24V
-		nanolibHelper.writeInteger(*connectedDeviceHandle, 31, nlc::OdIndex(0x3240, 0x06), 32);
+
 		//set input 1 and 2 to negative, positive endswitch
-		nanolibHelper.writeInteger(*connectedDeviceHandle, 3, nlc::OdIndex(0x3240, 0x01), 32);
+		UINT32 uWord32 = 0;
+		uWord32 = static_cast<UINT32>(nanolibHelper.readInteger(*connectedDeviceHandle, nlc::OdIndex(0x3240, 0x01)));	
+		uWord32 |= 1UL << 0;
+		uWord32 |= 1UL << 1;
+		nanolibHelper.writeInteger(*connectedDeviceHandle, uWord32, nlc::OdIndex(0x3240, 0x01), 32);
+		//set digital inputs to range 24V
+		uWord32 = static_cast<UINT32>(nanolibHelper.readInteger(*connectedDeviceHandle, nlc::OdIndex(0x3240, 0x06)));
+		uWord32 |= 1UL << 0;
+		uWord32 |= 1UL << 1;
+		nanolibHelper.writeInteger(*connectedDeviceHandle, uWord32, nlc::OdIndex(0x3240, 0x06), 32);
+		//set opener logic
+		uWord32 = static_cast<UINT32>(nanolibHelper.readInteger(*connectedDeviceHandle, nlc::OdIndex(0x3240, 0x02)));
+		uWord32 |= 1UL << 0;
+		uWord32 |= 1UL << 1;
+		nanolibHelper.writeInteger(*connectedDeviceHandle, uWord32, nlc::OdIndex(0x3240, 0x02), 32);
 
 	}
 	catch (const nanolib_exception& e) {

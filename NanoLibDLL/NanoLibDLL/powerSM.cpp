@@ -14,10 +14,6 @@ bool PowerSM::stateChanged(uint8_t &lastState, uint8_t &currentState)
 	if (getCurrentState(currentState)) {
 		return false;
 	}
-	DBOUT("stateChanged: cs: ")
-	DBOUT(currentState)
-	DBOUT(" ls: ")
-	DBOUT(lastState)
 	return currentState != lastState;
 }
 
@@ -27,7 +23,6 @@ int PowerSM::enableOperation() {
 	if (getCurrentState(currentState))
 		return EXIT_FAILURE;
 	while (stateChanged(lastState,currentState)) {
-		DBOUT(currentState)
 		lastState = currentState;
 		switch (currentState) {
 		case ST_NOT_READY_TO_SWITCH_ON:

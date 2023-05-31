@@ -3,22 +3,21 @@
 #include "controller.h"
 #include <iostream>
 
-int getPorts(char** list, int rows, int cols) {
+MgErr getPorts(void** cPtr, std::vector<std::string> &ports) {
+	MgErr err = 0;
 
-	Controller c;
-	std::vector<std::string> ports;
-	int status = c.getAvailablePorts(ports);
-	if (status != EXIT_SUCCESS)
-		return EXIT_FAILURE;
-
-	for (int i = 0; (i < rows) && (i < ports.size()); i++) {
-		if (strlen(ports[i].c_str()) > cols)
-			return 2; //NOT ENOUGH COLS
-		strcpy_s(list[i], cols, ports[i].c_str());
+	if (!(uintptr_t)*cPtr) {
+		*cPtr = new Controller();
 	}
+	Controller* c = static_cast<Controller*>(*cPtr);
 
-	return EXIT_SUCCESS;
+	ports.clear();
 
+	int status = c->getAvailablePorts(ports);
+	if (status != EXIT_SUCCESS)
+		return 501; //private error
+
+	return err;
 }
 
 
@@ -38,7 +37,7 @@ MgErr getPortsLV(void **cPtr, LStrArrayHdl *arr) {
 	err = vecStrToLVStrArr(ports, arr);
 
 	if (err) {
-		closePortLV(cPtr);
+		closePort(cPtr);
 	}
 	
 	return err;
@@ -55,8 +54,23 @@ MgErr openPort(void **cPtr, unsigned int portToOpen) {
 	err=c->openPort(portToOpen);	
 
 	if (err) {
-		closePortLV(cPtr);
+		closePort(cPtr);
 	}
+	return err;
+}
+
+MgErr scanBus(void** cPtr, std::vector<std::string> &devices) {
+	MgErr err = 0;
+	if (!(uintptr_t)*cPtr) {
+		*cPtr = new Controller();
+	}
+	Controller* c = static_cast<Controller*>(*cPtr);
+	devices.clear();
+	err = c->scanBus(devices);
+	if (err) {
+		closePort(cPtr);
+	}
+
 	return err;
 }
 
@@ -71,7 +85,7 @@ MgErr scanBusLV(void** cPtr, LStrArrayHdl* LVAllocatedStrArray) {
 	if (err == EXIT_SUCCESS)
 		err = vecStrToLVStrArr(devices, LVAllocatedStrArray);
 	if (err) {
-		closePortLV(cPtr);
+		closePort(cPtr);
 	}
 
 	return err;
@@ -84,17 +98,58 @@ MgErr connectDevice(void** cPtr, unsigned int deviceToOpen) {
 		*cPtr = new Controller();
 	}
 	Controller* c = static_cast<Controller*>(*cPtr);
-	std::cout << c << std::endl;
 	err = c->connectDevice(deviceToOpen);
 	std::cout << err << std::endl;
 	if (err) {
 		std::cout << err << std::endl;
-		closePortLV(cPtr);
+		closePort(cPtr);
 	}
 	return err;
 }
 
-MgErr home(void** cPtr) {
+MgErr setMotorMaxCurrent(void** cPtr, unsigned int maxCurrent) {
+	MgErr err = 0;
+	if (!(uintptr_t)*cPtr) {
+		*cPtr = new Controller();
+	}
+	Controller* c = static_cast<Controller*>(*cPtr);
+	err = c->setMaxMotorCurrent(maxCurrent);
+	if (err) {
+		std::cout << err << std::endl;
+		closePort(cPtr);
+	}
+	return err;
+}
+
+MgErr setProfileAcceleration(void** cPtr, unsigned int acc) {
+	MgErr err = 0;
+	if (!(uintptr_t)*cPtr) {
+		*cPtr = new Controller();
+	}
+	Controller* c = static_cast<Controller*>(*cPtr);
+	err = c->setProfileAcceleration(acc);
+	if (err) {
+		std::cout << err << std::endl;
+		closePort(cPtr);
+	}
+	return err;
+}
+
+MgErr setHomingAcceleration(void** cPtr, unsigned int acc) {
+	MgErr err = 0;
+	if (!(uintptr_t)*cPtr) {
+		*cPtr = new Controller();
+	}
+	Controller* c = static_cast<Controller*>(*cPtr);
+	err = c->setHomingAcceleration(acc);
+	if (err) {
+		std::cout << err << std::endl;
+		closePort(cPtr);
+	}
+	return err;
+}
+
+MgErr home(void** cPtr, unsigned int rpm) {
 	MgErr err = 0;
 	if (!(uintptr_t)*cPtr) {
 		*cPtr = new Controller();
@@ -102,10 +157,10 @@ MgErr home(void** cPtr) {
 	}
 	Controller* c = static_cast<Controller*>(*cPtr);
 
-	err = c->home();
+	err = c->home(rpm);
 
 	if (err) {
-		closePortLV(cPtr);
+		closePort(cPtr);
 	}
 	return err;
 }
@@ -121,7 +176,7 @@ MgErr stop(void** cPtr) {
 	err = c->stop();
 
 	if (err) {
-		closePortLV(cPtr);
+		closePort(cPtr);
 	}
 	return err;
 }
@@ -164,7 +219,7 @@ MgErr vecStrToLVStrArr(const std::vector<std::string>& s, LStrArrayHdl* arr) {
 	return err;
 }
 
-MgErr closePortLV(void **cPtr) {
+MgErr closePort(void **cPtr) {
 	MgErr err=0;
 	if (!(uintptr_t)*cPtr) {
 		Controller* c = static_cast<Controller*>(*cPtr);
@@ -183,13 +238,13 @@ MgErr autoSetupMotPams(void** cPtr) {
 	err=c->autoSetupMotPams();
 	
 	if (err) {
-		closePortLV(cPtr);
+		closePort(cPtr);
 	}
 	
 	return err;
 }
 
-MgErr setRPM(void** cPtr,short rpm) {
+MgErr setRPM(void** cPtr,unsigned int rpm) {
 	MgErr err = 0;
 	if (!(uintptr_t)*cPtr) {
 		*cPtr = new Controller();
@@ -198,7 +253,7 @@ MgErr setRPM(void** cPtr,short rpm) {
 	err = c->setProfileVelocity(rpm);
 
 	if (err) {
-		closePortLV(cPtr);
+		closePort(cPtr);
 	}
 
 	return err;
@@ -213,7 +268,7 @@ MgErr setFeedConstant(void** cPtr, unsigned int pitchZehntelMM) {
 	err = c->setFeedConstant(pitchZehntelMM);
 
 	if (err) {
-		closePortLV(cPtr);
+		closePort(cPtr);
 	}
 
 	return err;
@@ -229,7 +284,7 @@ MgErr moveToDeciMM(void** cPtr, int deciMM) {
 	err = c->moveToPosition(deciMM);
 
 	if (err) {
-		closePortLV(cPtr);
+		closePort(cPtr);
 	}
 
 	return err;
