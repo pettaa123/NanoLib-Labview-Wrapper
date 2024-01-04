@@ -1,0 +1,3 @@
+[submodule "VI/modules/cmh-library"]
+	path = VI/modules/cmh-library
+	url = https://github.com/pettaa123/CMH-Library

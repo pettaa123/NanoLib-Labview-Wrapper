@@ -12,14 +12,10 @@
 		<Property Name="server.vi.propertiesEnabled" Type="Bool">true</Property>
 		<Property Name="specify.custom.address" Type="Bool">false</Property>
 		<Item Name="call library.vi" Type="VI" URL="../call library.vi"/>
-		<Item Name="Message Queue Helper.lvlib" Type="Library" URL="../../modules/cmh-library/Message Queue Helper.lvlib"/>
-		<Item Name="Message Queue.lvlib" Type="Library" URL="../../modules/cmh-library/Message Queue.lvlib"/>
+		<Item Name="Message Queue Helper.lvlib" Type="Library" URL="../modules/cmh-library/Message Queue Helper.lvlib"/>
+		<Item Name="Message Queue.lvlib" Type="Library" URL="../modules/cmh-library/Message Queue.lvlib"/>
 		<Item Name="Nanotec Controller.lvlib" Type="Library" URL="../Nanotec Controller.lvlib"/>
 		<Item Name="Dependencies" Type="Dependencies">
-			<Item Name="user.lib" Type="Folder">
-				<Item Name="Insert VI into SubPanel.vi" Type="VI" URL="/&lt;userlib&gt;/Insert VI into SubPanel.vi"/>
-				<Item Name="Variant to Data.vim" Type="VI" URL="/&lt;userlib&gt;/Variant to Data.vim"/>
-			</Item>
 			<Item Name="vi.lib" Type="Folder">
 				<Item Name="BuildHelpPath.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/BuildHelpPath.vi"/>
 				<Item Name="Channel Message.lvclass" Type="LVClass" URL="/&lt;vilib&gt;/ChannelSupport/Channel Message/Channel Message.lvclass"/>
