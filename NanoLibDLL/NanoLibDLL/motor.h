@@ -6,6 +6,18 @@
 #include "powerSM.h"
 #include "userUnits.h"
 
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#include <Windows.h>
+#include <iostream>
+#ifndef DBOUT
+#define DBOUT( s )            \
+{                             \
+   std::wostringstream os_;    \
+   os_ << s;                   \
+   OutputDebugStringW( os_.str().c_str() );  \
+}
+#endif
+
 //general motor class
 class Motor402 {
 
@@ -37,7 +49,7 @@ public:
 
 	Motor402(NanoLibHelper *nanolibHelper, std::optional<nlc::DeviceHandle> *connectedDeviceHandle, PowerSM *powerSM);
 	~Motor402() {
-		std::cout << "destructing motor";
+		DBOUT("destructing motor");
 	};
 
 	//works for modes: ProfilePosition,Velocity,Profile Velocity,Profile Torque,Interpolated Mode

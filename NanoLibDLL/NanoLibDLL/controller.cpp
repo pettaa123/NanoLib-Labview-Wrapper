@@ -1,14 +1,34 @@
 #include <format>
+#include <cstdint>
 
 #include "controller.h"
 #include "userUnits.h"
 #include "magic_enum.hpp"
 
+
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#include <Windows.h>
+#include <iostream>
+#ifndef DBOUT
+#define DBOUT( s )            \
+{                             \
+   std::wostringstream os_;    \
+   os_ << s;                   \
+   OutputDebugStringW( os_.str().c_str() );  \
+}
+#endif
+
+Controller::Controller() {
+	// its possible to set the logging level to a different level
+	m_nanolibHelper.setLoggingLevel(nlc::LogLevel::Error);
+
+	m_powerSM = std::make_unique<PowerSM>(&m_nanolibHelper, &m_connectedDeviceHandle);
+}
+
 Controller::~Controller() {
-	m_powerSM->shutdown();
-	delete m_powerSM;
+	
 	if (m_openedBusHardware.has_value() && m_connectedDeviceHandle.has_value()) {
-		//make sure operation is disabled before changing user defined units
+		m_powerSM->shutdown();
 	}
 
 	// Always finalize connected hardware
@@ -241,7 +261,7 @@ int Controller::setMotorParameters(uint32_t polePairCount, uint32_t ratedCurrent
 	try {
 		checkConnection();
 		//take whichever motor for this
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		if (mot.setMotorParameters(polePairCount, ratedCurrent, maxCurrent, maxCurrentDuration,idleCurrent, static_cast<Motor402::DriveMode>(driveMode)))
 			return EXIT_FAILURE;
 	}
@@ -255,7 +275,7 @@ int Controller::setMotorParameters(uint32_t polePairCount, uint32_t ratedCurrent
 int Controller::getMotorParameters(uint32_t& polePairCount, uint32_t& ratedCurrent, uint32_t& maxCurrent, uint32_t& maxCurrentTime, uint32_t &idleCurrent, uint32_t& driveMode) {
 	try{ 
 		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		Motor402::DriveMode driveMode_t;
 		mot.getMotorParameters(polePairCount, ratedCurrent, maxCurrent, maxCurrentTime,idleCurrent, driveMode_t);
 		driveMode = driveMode_t;
@@ -270,7 +290,7 @@ int Controller::getMotorParameters(uint32_t& polePairCount, uint32_t& ratedCurre
 int Controller::saveGroupMovement() {
 	try {
 		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.saveGroup(0x05);
 	}
 	catch (nanolib_exception& e) {
@@ -283,7 +303,7 @@ int Controller::saveGroupMovement() {
 int Controller::saveGroupApplication() {
 	try {
 		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.saveGroup(0x03);
 	}
 	catch (nanolib_exception& e) {
@@ -296,7 +316,7 @@ int Controller::saveGroupApplication() {
 int Controller::saveGroupTuning() {
 	try {
 		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.saveGroup(0x06);
 	}
 	catch (nanolib_exception& e) {
@@ -309,7 +329,7 @@ int Controller::saveGroupTuning() {
 int Controller::halt() {
 	try {
 		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.halt();
 	}
 	catch (const nanolib_exception& e) {
@@ -325,7 +345,7 @@ int Controller::getDeviceErrorStack(std::vector<std::string>& errorStackStrings)
 	try {
 		checkConnection();
 		std::vector<int64_t> errorStack = m_nanolibHelper.readArray(*m_connectedDeviceHandle, 0x1003);
-		UINT8 numberOfErrors = static_cast<UINT8>(errorStack.at(0));
+		uint8_t numberOfErrors = static_cast<uint8_t>(errorStack.at(0));
 		DBOUT("Elements in error stack: " << std::to_string(numberOfErrors).c_str() << std::endl);
 		for (size_t i = 1; i <= numberOfErrors; i++) {
 			uint32_t error = static_cast<uint32_t>(errorStack.at(i));
@@ -362,7 +382,7 @@ int Controller::quickStop() {
 int Controller::getPositionActual(int32_t& position) {
 	try {
 		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		position = mot.getPositionActual();
 	}
 	catch (const nanolib_exception& e) {
@@ -376,7 +396,7 @@ int Controller::getPositionActual(int32_t& position) {
 int Controller::setUserUnitsFeed(uint32_t feedPer,uint32_t shaftRevolutions) {
 	try {
 		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.setUserUnitsFeed(feedPer,shaftRevolutions);
 	}
 	catch (const nanolib_exception& e) {
@@ -412,13 +432,12 @@ int Controller::getUserUnitsGearRatio(uint32_t& gearRatioMotorRevs,uint32_t& gea
 	return EXIT_SUCCESS;
 }
 
-
 //read all 5 inputs
-int Controller::readDigitalInputs(UINT8& state) {
+int Controller::readDigitalInputs(uint8_t& states) {
 	try {
 		checkConnection();
 		uint32_t uWord32 = static_cast<uint32_t>(m_nanolibHelper.readInteger(*m_connectedDeviceHandle, nlc::OdIndex(0x60FD, 0x00)));
-		state = (uWord32 >> 16) & 0xFF;
+		states = (uWord32 >> 16) & 0xFF;
 
 	}
 	catch (const nanolib_exception& e) {
@@ -462,7 +481,7 @@ int Controller::configureInputs() {
 int Controller::getModeOfOperation(std::string& mode) {
 	try {
 		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		Motor402::OperationMode opMode=static_cast<Motor402::OperationMode>(mot.getModeOfOperation());
 		auto enum_name = magic_enum::enum_name(opMode);
 		mode = enum_name;
@@ -504,7 +523,7 @@ int Controller::getCiA402State(std::string& state, bool &fault,bool &voltageEnab
 int Controller::autoSetupMotPams() {
 	try {
 		checkConnection();
-		AutoSetupMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		AutoSetupMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.autoSetupMotPams();
 	}
 	catch (const nanolib_exception& e) {
@@ -524,7 +543,7 @@ int Controller::home(uint32_t speedZero, uint32_t speedSwitch) {
 		if (configureInputs())
 			EXIT_FAILURE;
 
-		HomingMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		HomingMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		if (mot.home(speedZero, speedSwitch))
 			return EXIT_FAILURE;
 
@@ -540,7 +559,7 @@ int Controller::home(uint32_t speedZero, uint32_t speedSwitch) {
 int Controller::setHomingAcceleration(uint32_t acc) {
 	try {
 		checkConnection();
-		HomingMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		HomingMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.setHomingAcceleration(acc);
 	}
 	catch (const nanolib_exception& e) {
@@ -556,7 +575,7 @@ int Controller::setHomingAcceleration(uint32_t acc) {
 int Controller::setTargetPosition(int32_t value, uint32_t absRel) {
 	try {
 		checkConnection();
-		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.setTargetPosition(value,absRel);
 	}
 	catch (const nanolib_exception& e) {
@@ -569,7 +588,7 @@ int Controller::setTargetPosition(int32_t value, uint32_t absRel) {
 int Controller::setProfileAcceleration(uint32_t acc) {
 	try {
 		checkConnection();
-		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.setProfileAcceleration(acc);
 	}
 	catch (const nanolib_exception& e) {
@@ -582,7 +601,7 @@ int Controller::setProfileAcceleration(uint32_t acc) {
 int Controller::setProfileVelocity(uint32_t speed) {
 	try {
 		checkConnection();
-		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.setProfileVelocity(speed);
 	}
 	catch (const nanolib_exception& e) {
@@ -595,7 +614,7 @@ int Controller::setProfileVelocity(uint32_t speed) {
 int Controller::getPositioningParameters(uint32_t& profileVelocity, int32_t& targetPosition) {
 	try {
 		checkConnection();
-		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.getPositioningParameters(profileVelocity, targetPosition);
 	}
 	catch (const nanolib_exception& e) {
@@ -608,7 +627,7 @@ int Controller::getPositioningParameters(uint32_t& profileVelocity, int32_t& tar
 int Controller::startPositioning() {
 	try {
 		checkConnection();
-		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.startPositioning();
 	}
 	catch (const nanolib_exception& e) {
@@ -621,7 +640,7 @@ int Controller::startPositioning() {
 int Controller::getUserUnitsPositioning(uint32_t& unit, uint32_t& exp) {
 	try {
 		checkConnection();
-		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.getUserUnitsPositioning(unit,exp);
 	}
 	catch (const nanolib_exception& e) {
@@ -634,7 +653,7 @@ int Controller::getUserUnitsPositioning(uint32_t& unit, uint32_t& exp) {
 int Controller::setUserUnitsPositioning(uint32_t posUnit, uint32_t posExp) {
 	try {
 		checkConnection();
-		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.setUserUnitsPositioning(posUnit, posExp);
 	}
 	catch (const nanolib_exception& e) {
@@ -652,7 +671,7 @@ int Controller::setUserUnitsPositioning(uint32_t posUnit, uint32_t posExp) {
 int Controller::setTargetVelocity(int16_t vel) {
 	try {
 		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.setTargetVelocity(vel);
 	}
 	catch (const nanolib_exception& e) {
@@ -665,7 +684,7 @@ int Controller::setTargetVelocity(int16_t vel) {
 int Controller::startVelocity() {
 	try {
 		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.startVelocity();
 	}
 	catch (const nanolib_exception& e) {
@@ -677,7 +696,7 @@ int Controller::startVelocity() {
 int Controller::setVelocityAcceleration(uint32_t deltaSpeed, uint16_t deltaTime) {
 try {
 	checkConnection();
-	VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+	VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 	mot.setVelocityAcceleration(deltaSpeed,deltaTime );
 }
 catch (const nanolib_exception& e) {
@@ -690,7 +709,7 @@ return EXIT_SUCCESS;
 int Controller::getVelocityDemanded(int16_t &velDemanded) {
 	try {
 		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.getVelocityDemanded(velDemanded);
 	}
 	catch (const nanolib_exception& e) {
@@ -703,7 +722,7 @@ int Controller::getVelocityDemanded(int16_t &velDemanded) {
 int Controller::getVelocityActual(int16_t& velActual) {
 	try {
 		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.getVelocityActual(velActual);
 	}
 	catch (const nanolib_exception& e) {
@@ -716,7 +735,7 @@ int Controller::getVelocityActual(int16_t& velActual) {
 int Controller::setVelocityDeceleration(uint32_t deltaSpeed, uint16_t deltaTime) {
 	try {
 		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.setVelocityDeceleration(deltaSpeed, deltaTime);
 	}
 	catch (const nanolib_exception& e) {
@@ -729,7 +748,7 @@ int Controller::setVelocityDeceleration(uint32_t deltaSpeed, uint16_t deltaTime)
 int Controller::getTargetVelocity(int16_t& vel) {
 	try {
 		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.getTargetVelocity(vel);
 	}
 	catch (const nanolib_exception& e) {
@@ -741,7 +760,7 @@ int Controller::getTargetVelocity(int16_t& vel) {
 int Controller::getVelocityAcceleration(uint32_t& deltaSpeed, uint16_t& deltaTime){
 	try {
 		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.getVelocityAcceleration(deltaSpeed,deltaTime);
 	}
 	catch (const nanolib_exception& e) {
@@ -753,7 +772,7 @@ int Controller::getVelocityAcceleration(uint32_t& deltaSpeed, uint16_t& deltaTim
 int Controller::getVelocityDeceleration(uint32_t& deltaSpeed, uint16_t& deltaTime){
 	try {
 		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.getVelocityDeceleration(deltaSpeed,deltaTime);
 	}
 	catch (const nanolib_exception& e) {
@@ -767,7 +786,7 @@ int Controller::getVelocityDeceleration(uint32_t& deltaSpeed, uint16_t& deltaTim
 int Controller::setUserUnitsVelocity(uint32_t velUnit, uint32_t velExp, uint32_t velTime) {
 	try {
 		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.setUserUnitsVelocity(velUnit, velExp,velTime);
 	}
 	catch (const nanolib_exception& e) {
@@ -783,7 +802,7 @@ int Controller::setUserUnitsVelocity(uint32_t velUnit, uint32_t velExp, uint32_t
 int Controller::getUserUnitsVelocity(uint32_t &unit, uint32_t& exp, uint32_t& time) {
 	try {
 		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, m_powerSM);
+		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
 		mot.getUserUnitsVelocity(unit,exp, time);
 	}
 	catch (const nanolib_exception& e) {

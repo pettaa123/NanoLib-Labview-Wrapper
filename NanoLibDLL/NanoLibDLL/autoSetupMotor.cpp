@@ -1,7 +1,6 @@
 #include <chrono>
 #include "autoSetupMotor.h"
 
-
 int AutoSetupMotor::autoSetupMotPams() {
 
 	if (m_powerSM->shutdown())

@@ -2,6 +2,18 @@
 #include <thread>
 #include "motor.h"
 
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#include <Windows.h>
+#include <iostream>
+#ifndef DBOUT
+#define DBOUT( s )            \
+{                             \
+   std::wostringstream os_;    \
+   os_ << s;                   \
+   OutputDebugStringW( os_.str().c_str() );  \
+}
+#endif
+
 
 Motor402::Motor402(NanoLibHelper *nanolibHelper, std::optional<nlc::DeviceHandle> *connectedDeviceHandle, PowerSM *powerSM) :
 	m_nanolibHelper(nanolibHelper),

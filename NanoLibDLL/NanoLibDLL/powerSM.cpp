@@ -1,13 +1,26 @@
 #include "powerSM.h"
 #include <format>
 
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#include <Windows.h>
+#include <iostream>
+#ifndef DBOUT
+#define DBOUT( s )            \
+{                             \
+   std::wostringstream os_;    \
+   os_ << s;                   \
+   OutputDebugStringW( os_.str().c_str() );  \
+}
+
+#endif
+
 PowerSM::PowerSM(NanoLibHelper *nanolibHelper, std::optional<nlc::DeviceHandle> *connectedDeviceHandle) :
 	nanolibHelper(nanolibHelper),
 	connectedDeviceHandle(connectedDeviceHandle)
 {};
 
 PowerSM::~PowerSM() {
-	std::cout << "destructing power sm" << std::endl;
+	DBOUT("destructing power sm");
 };
 
 bool PowerSM::stateChanged(uint8_t& lastState, uint8_t& currentState)

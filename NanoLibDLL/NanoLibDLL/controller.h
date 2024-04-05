@@ -98,9 +98,11 @@ public:
 
 private:
 
+	Controller();
+
 	static Controller* m_instancePtr;
 
-	PowerSM *m_powerSM;
+	std::unique_ptr<PowerSM> m_powerSM;
 
 	NanoLibHelper m_nanolibHelper;
 	std::optional<nlc::BusHardwareId> m_openedBusHardware;
@@ -111,13 +113,6 @@ private:
 	int checkConnection();
 
 	int readDigitalInputs(uint8_t& states);
-
-	Controller() {
-		// its possible to set the logging level to a different level
-		m_nanolibHelper.setLoggingLevel(nlc::LogLevel::Error);
-
-		m_powerSM = new PowerSM(&m_nanolibHelper, &m_connectedDeviceHandle);
-	}
 
 };
 

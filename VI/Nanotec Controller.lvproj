@@ -45,7 +45,8 @@
 				<Item Name="Longest Line Length in Pixels.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Longest Line Length in Pixels.vi"/>
 				<Item Name="LVBoundsTypeDef.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/miscctls.llb/LVBoundsTypeDef.ctl"/>
 				<Item Name="LVRectTypeDef.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/miscctls.llb/LVRectTypeDef.ctl"/>
-				<Item Name="Message Queue.lvlib" Type="Library" URL="/&lt;vilib&gt;/DLR/CMH Lib/Message Queue.lvlib"/>
+				<Item Name="Message Queue Helper.lvlib" Type="Library" URL="/&lt;vilib&gt;/DLR/CMH Library/Message Queue Helper.lvlib"/>
+				<Item Name="Message Queue.lvlib" Type="Library" URL="/&lt;vilib&gt;/DLR/CMH Library/Message Queue.lvlib"/>
 				<Item Name="NI_FileType.lvlib" Type="Library" URL="/&lt;vilib&gt;/Utility/lvfile.llb/NI_FileType.lvlib"/>
 				<Item Name="NI_PackedLibraryUtility.lvlib" Type="Library" URL="/&lt;vilib&gt;/Utility/LVLibp/NI_PackedLibraryUtility.lvlib"/>
 				<Item Name="Not Found Dialog.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Not Found Dialog.vi"/>
@@ -68,8 +69,6 @@
 			<Item Name="ChannelProbePositionAndTitle.vi" Type="VI" URL="/&lt;resource&gt;/ChannelSupport/_ChannelSupport/ChannelProbePositionAndTitle.vi"/>
 			<Item Name="ChannelProbeWindowStagger.vi" Type="VI" URL="/&lt;resource&gt;/ChannelSupport/_ChannelSupport/ChannelProbeWindowStagger.vi"/>
 			<Item Name="Event Messenger-bool.lvlib" Type="Library" URL="/&lt;extravilib&gt;/ChannelInstances/Event Messenger-bool.lvlib"/>
-			<Item Name="Message Queue Helper.lvlib" Type="Library" URL="../modules/cmh-library/Message Queue Helper.lvlib"/>
-			<Item Name="Message Queue.lvlib" Type="Library" URL="../modules/cmh-library/Message Queue.lvlib"/>
 			<Item Name="Messenger-t&apos;Message Queue.lvlib-Message Cluster.ctl&apos;.lvlib" Type="Library" URL="/&lt;extravilib&gt;/ChannelInstances/Messenger-t&apos;Message Queue.lvlib-Message Cluster.ctl&apos;.lvlib"/>
 			<Item Name="NanoLibDLL.dll" Type="Document" URL="NanoLibDLL.dll">
 				<Property Name="NI.PreserveRelativePath" Type="Bool">true</Property>

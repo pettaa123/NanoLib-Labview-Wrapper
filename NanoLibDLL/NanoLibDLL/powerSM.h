@@ -2,19 +2,6 @@
 #include <cstdint>
 #include "nanolib_helper.hpp"
 
-#include <Windows.h>
-#include <iostream>
-#ifndef DBOUT
-#define DBOUT( s )            \
-{                             \
-   std::wostringstream os_;    \
-   os_ << s;                   \
-   OutputDebugStringW( os_.str().c_str() );  \
-}
-
-#endif
-
-
 
 //Die Steuerung erreicht nach Einschalten und erfolgreichem Selbsttest den Zustand Switch on disabled.
 
