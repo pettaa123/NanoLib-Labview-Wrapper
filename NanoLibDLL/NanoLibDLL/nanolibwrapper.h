@@ -40,6 +40,8 @@ extern "C" NANOLIBDLL_API int32_t getPortsLV(LStrArrayHdl * LVAllocatedStrArray)
 
 extern "C" NANOLIBDLL_API int32_t scanBusLV(LStrArrayHdl * LVAllocatedStrArray);
 
+extern "C" NANOLIBDLL_API int32_t getExceptions(std::vector<std::string> &exceptions);
+
 extern "C" NANOLIBDLL_API int32_t getExceptionsLV(LStrArrayHdl * LVAllocatedStrArray);
 
 extern "C" NANOLIBDLL_API int32_t getErrorStackLV(LStrArrayHdl * LVAllocatedStrArray);

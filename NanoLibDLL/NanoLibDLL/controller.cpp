@@ -122,7 +122,7 @@ int Controller::getAvailablePorts(std::vector<std::string>& ports) {
 
 		if (busHardwareIds.empty()) {
 			// "No hardware buses found." << std::endl;
-			return EXIT_SUCCESS;
+			throw nanolib_exception("No bus found");
 		}
 
 		ports.clear();

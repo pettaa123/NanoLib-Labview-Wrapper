@@ -82,25 +82,27 @@ int32_t rebootDevice() {
 	return c->rebootDevice();
 }
 
-int32_t getExceptionsLV(LStrArrayHdl* LVAllocatedStrArray) {
+int32_t getExceptions(std::vector<std::string>& exceptions) {
 	Controller* c = Controller::getInstance();
-	std::vector<std::string> exceptions;
 	if (c->getExceptions(exceptions))
+		return EXIT_FAILURE;
+}
+
+int32_t getExceptionsLV(LStrArrayHdl* LVAllocatedStrArray) {
+	std::vector<std::string> exceptions;
+	if (getExceptions(exceptions))
 		return EXIT_FAILURE;
 	return vecStrToLVStrArr(exceptions, LVAllocatedStrArray);
 }
 
 
 int32_t getPortsLV(LStrArrayHdl* arr) {
+
 	int32_t err = 0;
-
-	Controller* c = Controller::getInstance();
-
 	std::vector<std::string> ports;
 
-	if (c->getAvailablePorts(ports))
+	if (getPorts(ports))
 		return EXIT_FAILURE;
-
 	err = vecStrToLVStrArr(ports, arr);
 
 	return err;
