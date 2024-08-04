@@ -36,98 +36,101 @@ typedef LVuint32Array** LVuint32ArrayHdl;
 #define uPtr uL //unsigned Long aka 32-bit
 #endif
 
-extern "C" NANOLIBDLL_API int32_t getPortsLV(LStrArrayHdl * LVAllocatedStrArray);
+namespace NanoLibWrapper {
 
-extern "C" NANOLIBDLL_API int32_t scanBusLV(LStrArrayHdl * LVAllocatedStrArray);
+	extern "C" NANOLIBDLL_API int32_t GetPortsLV(LStrArrayHdl * LVAllocatedStrArray);
 
-extern "C" NANOLIBDLL_API int32_t getExceptions(std::vector<std::string> &exceptions);
+	extern "C" NANOLIBDLL_API int32_t ScanBusLV(LStrArrayHdl * LVAllocatedStrArray);
 
-extern "C" NANOLIBDLL_API int32_t getExceptionsLV(LStrArrayHdl * LVAllocatedStrArray);
+	extern "C" NANOLIBDLL_API int32_t GetExceptions(std::vector<std::string> &exceptions);
 
-extern "C" NANOLIBDLL_API int32_t getErrorStackLV(LStrArrayHdl * LVAllocatedStrArray);
+	extern "C" NANOLIBDLL_API int32_t GetExceptionsLV(LStrArrayHdl * LVAllocatedStrArray);
 
-extern "C" NANOLIBDLL_API int32_t getModeOfOperationLV(LStrHandle * LVAllocatedStr);
+	extern "C" NANOLIBDLL_API int32_t GetErrorStackLV(LStrArrayHdl * LVAllocatedStrArray);
 
-extern "C" NANOLIBDLL_API int32_t getCiA402StateLV(LStrHandle *LVAllocatedStr, LVBoolean *fault, LVBoolean *voltageEnabled, LVBoolean *quickStop, LVBoolean *warning, LVBoolean *targetReached, LVBoolean *limitReached, LVBoolean *bit12, LVBoolean *bit13);
+	extern "C" NANOLIBDLL_API int32_t GetModeOfOperationLV(LStrHandle * LVAllocatedStr);
 
-int32_t stdStrToLVStr(const std::string& s, LStrHandle * str);
+	extern "C" NANOLIBDLL_API int32_t GetCiA402StateLV(LStrHandle * LVAllocatedStr, LVBoolean * fault, LVBoolean * voltageEnabled, LVBoolean * quickStop, LVBoolean * warning, LVBoolean * targetReached, LVBoolean * limitReached, LVBoolean * bit12, LVBoolean * bit13);
 
-int32_t vecStrToLVStrArr(const std::vector<std::string>& s, LStrArrayHdl* arr);
+	int32_t StdStrToLVStr(const std::string& s, LStrHandle* str);
 
-int32_t vecUint32ToLVuint32Arr(const std::vector<std::string>& s, LVuint32ArrayHdl* arr);
+	int32_t VecStrToLVStrArr(const std::vector<std::string>& s, LStrArrayHdl* arr);
 
-//***GENERAL***
+	int32_t VecUint32ToLVuint32Arr(const std::vector<std::string>& s, LVuint32ArrayHdl* arr);
 
-
-extern "C" NANOLIBDLL_API int32_t rebootDevice();
-
-extern "C" NANOLIBDLL_API int32_t getPorts(std::vector<std::string> &ports);
-
-extern "C" NANOLIBDLL_API int32_t getUserUnits(uint32_t & feed, uint32_t &shaftRevs, uint32_t &posUnit, uint32_t &posExp, uint32_t &velUnit, uint32_t &velExp, uint32_t &velTime, uint32_t &gearRatioMotorRevs, uint32_t &gearRatioShaftRevs);
-
-extern "C" NANOLIBDLL_API int32_t setUserUnits(uint32_t feed, uint32_t shaftRevs, uint32_t posUnit, uint32_t posExp, uint32_t velUnit, uint32_t velExp, uint32_t velTime, uint32_t gearRatioMotorRevs, uint32_t gearRatioShaftRevs);
-
-extern "C" NANOLIBDLL_API int32_t openPort(uint32_t portToOpen);
-
-extern "C" NANOLIBDLL_API int32_t scanBus(std::vector<std::string> &ports);
-
-extern "C" NANOLIBDLL_API int32_t connectDevice(uint32_t deviceToOpen);
-
-extern "C" NANOLIBDLL_API int32_t disconnectDevice();
-
-extern "C" NANOLIBDLL_API int32_t closePort();
-
-extern "C" NANOLIBDLL_API int32_t home(uint32_t speedZero, uint32_t speedSwitch);
-
-extern "C" NANOLIBDLL_API int32_t getFirmwareVersion(std::string & ver);
-
-extern "C" NANOLIBDLL_API int32_t getFirmwareVersionLV(LStrHandle * ver);
-
-extern "C" NANOLIBDLL_API int32_t halt();
-
-extern "C" NANOLIBDLL_API int32_t quickStop();
-
-extern "C" NANOLIBDLL_API int32_t autoSetupMotPams();
-
-extern "C" NANOLIBDLL_API int32_t setMotorParameters(uint32_t polePairCount,uint32_t ratedCurrent, uint32_t maxCurrent, uint32_t maxCurrentDuration, uint32_t idleCurrent,uint32_t driveMode);
-
-extern "C" NANOLIBDLL_API int32_t getMotorParameters(uint32_t & polePairCount, uint32_t & ratedCurrent, uint32_t & maxCurrent, uint32_t & maxCurrentTime, uint32_t &idleCurrent, uint32_t & driveMode);
-
-extern "C" NANOLIBDLL_API int32_t getPositioningParameters(uint32_t &profileVelocity, int32_t &setTarget);
-
-extern "C" NANOLIBDLL_API int32_t saveMotorParameters();
-
-extern "C" NANOLIBDLL_API int32_t saveUserUnits();
-
-extern "C" NANOLIBDLL_API int32_t getPositionActual(int32_t &pos);
+	//***GENERAL***
 
 
-//***HOMING***
+	extern "C" NANOLIBDLL_API int32_t RebootDevice();
+
+	extern "C" NANOLIBDLL_API int32_t GetPorts(std::vector<std::string> &ports);
+
+	extern "C" NANOLIBDLL_API int32_t GetUserUnits(uint32_t & feed, uint32_t & shaftRevs, uint32_t & posUnit, uint32_t & posExp, uint32_t & velUnit, uint32_t & velExp, uint32_t & velTime, uint32_t & gearRatioMotorRevs, uint32_t & gearRatioShaftRevs);
+
+	extern "C" NANOLIBDLL_API int32_t SetUserUnits(uint32_t feed, uint32_t shaftRevs, uint32_t posUnit, uint32_t posExp, uint32_t velUnit, uint32_t velExp, uint32_t velTime, uint32_t gearRatioMotorRevs, uint32_t gearRatioShaftRevs);
+
+	extern "C" NANOLIBDLL_API int32_t OpenPort(uint32_t portToOpen);
+
+	extern "C" NANOLIBDLL_API int32_t ScanBus(std::vector<std::string> &ports);
+
+	extern "C" NANOLIBDLL_API int32_t ConnectDevice(uint32_t deviceToOpen);
+
+	extern "C" NANOLIBDLL_API int32_t DisconnectDevice();
+
+	extern "C" NANOLIBDLL_API int32_t ClosePort();
+
+	extern "C" NANOLIBDLL_API int32_t Home(uint32_t speedZero, uint32_t speedSwitch);
+
+	extern "C" NANOLIBDLL_API int32_t GetFirmwareVersion(std::string & ver);
+
+	extern "C" NANOLIBDLL_API int32_t GetFirmwareVersionLV(LStrHandle * ver);
+
+	extern "C" NANOLIBDLL_API int32_t Halt();
+
+	extern "C" NANOLIBDLL_API int32_t QuickStop();
+
+	extern "C" NANOLIBDLL_API int32_t AutoSetupMotPams();
+
+	extern "C" NANOLIBDLL_API int32_t SetMotorParameters(uint32_t polePairCount, uint32_t ratedCurrent, uint32_t maxCurrent, uint32_t maxCurrentDuration, uint32_t idleCurrent, uint32_t driveMode);
+
+	extern "C" NANOLIBDLL_API int32_t GetMotorParameters(uint32_t & polePairCount, uint32_t & ratedCurrent, uint32_t & maxCurrent, uint32_t & maxCurrentTime, uint32_t & idleCurrent, uint32_t & driveMode);
+
+	extern "C" NANOLIBDLL_API int32_t GetPositioningParameters(uint32_t & profileVelocity, int32_t & setTarget);
+
+	extern "C" NANOLIBDLL_API int32_t SaveMotorParameters();
+
+	extern "C" NANOLIBDLL_API int32_t SaveUserUnits();
+
+	extern "C" NANOLIBDLL_API int32_t GetPositionActual(int32_t & pos);
 
 
-extern "C" NANOLIBDLL_API int32_t home(uint32_t speedZero, uint32_t speedSwitch);
-
-extern "C" NANOLIBDLL_API int32_t setHomingAcceleration(uint32_t acc);
+	//***HOMING***
 
 
-//***VELOCITY
+	extern "C" NANOLIBDLL_API int32_t Home(uint32_t speedZero, uint32_t speedSwitch);
 
-extern "C" NANOLIBDLL_API int32_t startVelocity();
-
-extern "C" NANOLIBDLL_API int32_t setVelocityPams(int16_t vel, uint32_t deltaSpeedAcc, uint16_t deltaTimeAcc, uint32_t deltaSpeedDec, uint16_t deltaTimeDec);
-
-extern "C" NANOLIBDLL_API int32_t getVelocityPams(int16_t &vel, uint32_t &deltaSpeedAcc, uint16_t &deltaTimeAcc, uint32_t &deltaSpeedDec, uint16_t &deltaTimeDec);
-
-extern "C" NANOLIBDLL_API int32_t getVelocityStatus(int16_t &demandedSpeed, int16_t & speedActual);
+	extern "C" NANOLIBDLL_API int32_t SetHomingAcceleration(uint32_t acc);
 
 
-//***POSITIONING***
+	//***VELOCITY
 
-extern "C" NANOLIBDLL_API int32_t setTargetPosition(int32_t position, uint32_t absRel);
+	extern "C" NANOLIBDLL_API int32_t StartVelocity();
 
-extern "C" NANOLIBDLL_API int32_t setProfileVelocity(uint32_t speed);
+	extern "C" NANOLIBDLL_API int32_t SetVelocityPams(int16_t vel, uint32_t deltaSpeedAcc, uint16_t deltaTimeAcc, uint32_t deltaSpeedDec, uint16_t deltaTimeDec);
 
-extern "C" NANOLIBDLL_API int32_t startPositioning();
+	extern "C" NANOLIBDLL_API int32_t GetVelocityPams(int16_t & vel, uint32_t & deltaSpeedAcc, uint16_t & deltaTimeAcc, uint32_t & deltaSpeedDec, uint16_t & deltaTimeDec);
 
-extern "C" NANOLIBDLL_API int32_t setProfileAcceleration(uint32_t acc);
+	extern "C" NANOLIBDLL_API int32_t GetVelocityStatus(int16_t & demandedSpeed, int16_t & speedActual);
 
+
+	//***POSITIONING***
+
+	extern "C" NANOLIBDLL_API int32_t SetTargetPosition(int32_t position, uint32_t absRel);
+
+	extern "C" NANOLIBDLL_API int32_t SetProfileVelocity(uint32_t speed);
+
+	extern "C" NANOLIBDLL_API int32_t StartPositioning();
+
+	extern "C" NANOLIBDLL_API int32_t SetProfileAcceleration(uint32_t acc);
+
+}

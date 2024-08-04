@@ -1,4 +1,4 @@
-#include "powerSM.h"
+#include "power_sm.h"
 #include <format>
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
@@ -23,45 +23,45 @@ PowerSM::~PowerSM() {
 	DBOUT("destructing power sm");
 };
 
-bool PowerSM::stateChanged(uint8_t& lastState, uint8_t& currentState)
+bool PowerSM::StateChanged(uint8_t& lastState, uint8_t& currentState)
 {
-	if (getCurrentState(currentState)) {
+	if (GetCurrentState(currentState)) {
 		return false;
 	}
 	return currentState != lastState;
 }
 
-int PowerSM::enableOperation() {
+int PowerSM::EnableOperation() {
 	uint8_t currentState = 0;
 	uint8_t lastState = 255;
 	uint8_t errorCounter = 0;
-	if (getCurrentState(currentState))
+	if (GetCurrentState(currentState))
 		return EXIT_FAILURE;
-	while (stateChanged(lastState, currentState)) {
+	while (StateChanged(lastState, currentState)) {
 		lastState = currentState;
 		switch (currentState) {
 		case States::NOT_READY_TO_SWITCH_ON:
 			throw nanolib_exception(" Not ready to switch on: Error can't be solved by software.");
 			return EXIT_FAILURE;
 		case States::SWITCHED_ON_DISABLED:
-			shutdown_2_6_8();
+			Shutdown_2_6_8();
 			break;
 		case States::READY_TO_SWITCH_ON:
-			switchOn_3();
+			SwitchOn_3();
 			break;
 		case States::SWITCHED_ON:
-			enableOperation_4();
+			EnableOperation_4();
 			break;
 		case States::OPERATION_ENABLED:
 			//already enabled
 			break;
 		case States::QUICK_STOP_ACTIVE:
-			enableOperationAfterQuickStop_16();
+			EnableOperationAfterQuickStop_16();
 			break;
 		case States::FAULT:
 			//try 2 times and then remain in error
 			if (errorCounter >= 2) {
-				faultReset_15();
+				FaultReset_15();
 				return EXIT_FAILURE;
 			}
 			errorCounter++;
@@ -74,19 +74,19 @@ int PowerSM::enableOperation() {
 	return EXIT_SUCCESS;
 }
 
-int PowerSM::disableOperation() {
+int PowerSM::DisableOperation() {
 	uint8_t currentState = 0;
-	if (getCurrentState(currentState))
+	if (GetCurrentState(currentState))
 		return EXIT_FAILURE;
 	if (currentState == States::NOT_READY_TO_SWITCH_ON) {
 		throw(nanolib_exception("Not ready to switch on: Error can't be solved by software"));
 		return EXIT_FAILURE;
 	}
 	if (currentState == States::FAULT)
-		faultReset_15();
+		FaultReset_15();
 	if (currentState == States::OPERATION_ENABLED)
-		disableOperation_5();
-	getCurrentState(currentState);
+		DisableOperation_5();
+	GetCurrentState(currentState);
 	//still operation enabled?
 	if (currentState == States::OPERATION_ENABLED) {
 		throw(nanolib_exception("Couldn't disable operation"));
@@ -96,31 +96,31 @@ int PowerSM::disableOperation() {
 		return EXIT_SUCCESS;
 }
 
-int PowerSM::shutdown() {
+int PowerSM::Shutdown() {
 	uint8_t currentState = 0;
-	if (getCurrentState(currentState))
+	if (GetCurrentState(currentState))
 		return EXIT_FAILURE;
 	if (currentState == States::NOT_READY_TO_SWITCH_ON) {
 		throw(nanolib_exception("Not ready to switch on: Error can't be solved by software"));
 		return EXIT_FAILURE;
 	}
 	if (currentState == States::FAULT)
-		faultReset_15();
+		FaultReset_15();
 	if (currentState == States::QUICK_STOP_ACTIVE)
-		disableVoltage_7_10_9_12();
+		DisableVoltage_7_10_9_12();
 	if (currentState == States::OPERATION_ENABLED || currentState == States::SWITCHED_ON || currentState == States::SWITCHED_ON_DISABLED)
-		shutdown_2_6_8();
+		Shutdown_2_6_8();
 	return EXIT_SUCCESS;
 }
 
-int PowerSM::quickStop() {
+int PowerSM::QuickStop() {
 	uint8_t currentState = 0;
-	if (getCurrentState(currentState))
+	if (GetCurrentState(currentState))
 		return EXIT_FAILURE;
 	if (currentState == States::OPERATION_ENABLED) {
-		quickStop_11();
+		QuickStop_11();
 	}
-	getCurrentState(currentState);
+	GetCurrentState(currentState);
 	//still operation enabled?
 	if (currentState == States::OPERATION_ENABLED) {
 		throw(nanolib_exception("Quickstop failed"));
@@ -130,7 +130,7 @@ int PowerSM::quickStop() {
 	return EXIT_SUCCESS;
 }
 
-int PowerSM::getCurrentState(uint8_t& state) {
+int PowerSM::GetCurrentState(uint8_t& state) {
 	uint16_t uWord16 = static_cast<uint16_t>(nanolibHelper->readInteger(connectedDeviceHandle->value(), nlc::OdIndex(0x6041, 0x00)));
 	//figure out state
 	if (
@@ -225,7 +225,7 @@ int PowerSM::getCurrentState(uint8_t& state) {
 	return EXIT_SUCCESS;
 }
 
-void PowerSM::shutdown_2_6_8() {
+void PowerSM::Shutdown_2_6_8() {
 	uint16_t uWord16 = static_cast<uint16_t>(nanolibHelper->readInteger(connectedDeviceHandle->value(), nlc::OdIndex(0x6040, 0x00)));
 	uWord16 &= ~(1U << 0);
 	uWord16 |= (1U << 1);
@@ -234,7 +234,7 @@ void PowerSM::shutdown_2_6_8() {
 	nanolibHelper->writeInteger(connectedDeviceHandle->value(), uWord16, nlc::OdIndex(0x6040, 0x00), 16);
 }
 
-void PowerSM::switchOn_3()
+void PowerSM::SwitchOn_3()
 {
 		uint16_t uWord16 = static_cast<uint16_t>(nanolibHelper->readInteger(connectedDeviceHandle->value(), nlc::OdIndex(0x6040, 0x00)));
 		uWord16 |= (1U << 0);
@@ -245,14 +245,14 @@ void PowerSM::switchOn_3()
 		nanolibHelper->writeInteger(connectedDeviceHandle->value(), uWord16, nlc::OdIndex(0x6040, 0x00), 16);
 }
 
-void PowerSM::disableVoltage_7_10_9_12()
+void PowerSM::DisableVoltage_7_10_9_12()
 {
 		uint16_t uWord16 = static_cast<uint16_t>(nanolibHelper->readInteger(connectedDeviceHandle->value(), nlc::OdIndex(0x6040, 0x00)));
 		uWord16 &= ~(1U << 1);
 		uWord16 &= ~(1U << 7);
 		nanolibHelper->writeInteger(connectedDeviceHandle->value(), uWord16, nlc::OdIndex(0x6040, 0x00), 16);
 }
-void PowerSM::quickStop_11(){
+void PowerSM::QuickStop_11(){
 		uint16_t uWord16 = static_cast<uint16_t>(nanolibHelper->readInteger(connectedDeviceHandle->value(), nlc::OdIndex(0x6040, 0x00)));
 		uWord16 |= (1U << 1);
 		uWord16 &= ~(1U << 2);
@@ -260,7 +260,7 @@ void PowerSM::quickStop_11(){
 		nanolibHelper->writeInteger(connectedDeviceHandle->value(), uWord16, nlc::OdIndex(0x6040, 0x00), 16);
 }
 
-void PowerSM::disableOperation_5()
+void PowerSM::DisableOperation_5()
 {
 	uint16_t uWord16 = static_cast<uint16_t>(nanolibHelper->readInteger(connectedDeviceHandle->value(), nlc::OdIndex(0x6040, 0x00)));
 	uWord16 |= (1U << 0);
@@ -271,7 +271,7 @@ void PowerSM::disableOperation_5()
 	nanolibHelper->writeInteger(connectedDeviceHandle->value(), uWord16, nlc::OdIndex(0x6040, 0x00), 16);
 }
 
-void PowerSM::enableOperation_4()
+void PowerSM::EnableOperation_4()
 {
 	uint16_t uWord16 = static_cast<uint16_t>(nanolibHelper->readInteger(connectedDeviceHandle->value(), nlc::OdIndex(0x6040, 0x00)));
 	uWord16 |= (1U << 0);
@@ -282,7 +282,7 @@ void PowerSM::enableOperation_4()
 	nanolibHelper->writeInteger(connectedDeviceHandle->value(), uWord16, nlc::OdIndex(0x6040, 0x00), 16);
 }
 
-void PowerSM::enableOperationAfterQuickStop_16() {
+void PowerSM::EnableOperationAfterQuickStop_16() {
 	uint16_t uWord16 = static_cast<uint16_t>(nanolibHelper->readInteger(connectedDeviceHandle->value(), nlc::OdIndex(0x6040, 0x00)));
 	uWord16 &= ~(1U << 2);
 	nanolibHelper->writeInteger(connectedDeviceHandle->value(), uWord16, nlc::OdIndex(0x6040, 0x00), 16);
@@ -295,7 +295,7 @@ void PowerSM::enableOperationAfterQuickStop_16() {
 	nanolibHelper->writeInteger(connectedDeviceHandle->value(), uWord16, nlc::OdIndex(0x6040, 0x00), 16);
 }
 
-void PowerSM::faultReset_15()
+void PowerSM::FaultReset_15()
 {
 	uint16_t uWord16 = static_cast<uint16_t>(nanolibHelper->readInteger(connectedDeviceHandle->value(), nlc::OdIndex(0x6040, 0x00)));
 	if ((uWord16 >> 7) & 1U) {

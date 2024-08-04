@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NanoLibDLL", "NanoLibDLL\NanoLibDLL.vcxproj", "{C8A004F0-1606-4E55-BDFF-2923FD55DBF7}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test\Test.vcxproj", "{F3C37D54-4BFF-4447-9670-7D16881E83E3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C8A004F0-1606-4E55-BDFF-2923FD55DBF7} = {C8A004F0-1606-4E55-BDFF-2923FD55DBF7}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

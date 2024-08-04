@@ -11,11 +11,11 @@ public:
 	PowerSM(NanoLibHelper *nanolibHelper, std::optional<nlc::DeviceHandle> *connectedDeviceHandle);
 	~PowerSM();
 
-	int shutdown();
-	int disableOperation();
-	int enableOperation();
-	int getCurrentState(uint8_t& state);
-	int quickStop();
+	int Shutdown();
+	int DisableOperation();
+	int EnableOperation();
+	int GetCurrentState(uint8_t& state);
+	int QuickStop();
 
 	enum States : int8_t
 	{
@@ -32,21 +32,21 @@ public:
 
 private:
 
-	NanoLibHelper *nanolibHelper;
-	std::optional<nlc::DeviceHandle> *connectedDeviceHandle;
+	NanoLibHelper* nanolibHelper;
+	std::optional<nlc::DeviceHandle>* connectedDeviceHandle;
 
-	void shutdown_2_6_8();
-	void switchOn_3();
-	void disableVoltage_7_10_9_12();
+	void Shutdown_2_6_8();
+	void SwitchOn_3();
+	void DisableVoltage_7_10_9_12();
 	/*	Übergang in den Zustand Quick stop active(quick stop option):
 	In diesem Fall wird die in Objekt 605Ah hinterlegte Aktion ausgeführt.	*/
-	void quickStop_11();
-	void disableOperation_5();
-	void enableOperation_4();
-	void enableOperationAfterQuickStop_16();
-	void faultReset_15();
+	void QuickStop_11();
+	void DisableOperation_5();
+	void EnableOperation_4();
+	void EnableOperationAfterQuickStop_16();
+	void FaultReset_15();
 
-	bool stateChanged(uint8_t& lastState, uint8_t& currentState);
+	bool StateChanged(uint8_t& lastState, uint8_t& currentState);
 
 };
 

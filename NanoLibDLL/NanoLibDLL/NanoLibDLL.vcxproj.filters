@@ -24,28 +24,28 @@
     <ClInclude Include="controller.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="powerSM.h">
+    <ClInclude Include="power_sm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="motor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="userUnits.h">
+    <ClInclude Include="user_units.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="profilePositionMotor.h">
+    <ClInclude Include="profile_position_motor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="velocityMotor.h">
+    <ClInclude Include="velocity_motor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="homingMotor.h">
+    <ClInclude Include="homing_motor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="autoSetupMotor.h">
+    <ClInclude Include="auto_setup_motor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="profileVelocityMotor.h">
+    <ClInclude Include="profile_velocity_motor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -62,20 +62,17 @@
     <ClCompile Include="controller.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="powerSM.cpp">
+    <ClCompile Include="power_sm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="motor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="autoSetupMotor.cpp">
+    <ClCompile Include="auto_setup_motor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="userUnits.cpp">
+    <ClCompile Include="user_units.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram.cd" />
   </ItemGroup>
 </Project>

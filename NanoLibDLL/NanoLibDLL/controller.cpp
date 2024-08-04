@@ -2,7 +2,7 @@
 #include <cstdint>
 
 #include "controller.h"
-#include "userUnits.h"
+#include "user_units.h"
 #include "magic_enum.hpp"
 
 
@@ -20,112 +20,112 @@
 
 Controller::Controller() {
 	// its possible to set the logging level to a different level
-	m_nanolibHelper.setLoggingLevel(nlc::LogLevel::Error);
+	nanolibHelper_.setLoggingLevel(nlc::LogLevel::Error);
 
-	m_powerSM = std::make_unique<PowerSM>(&m_nanolibHelper, &m_connectedDeviceHandle);
+	powerSM_ = std::make_unique<PowerSM>(&nanolibHelper_, &connectedDeviceHandle_);
 }
 
 Controller::~Controller() {
 	
-	if (m_openedBusHardware.has_value() && m_connectedDeviceHandle.has_value()) {
-		m_powerSM->shutdown();
+	if (openedBusHardware_.has_value() && connectedDeviceHandle_.has_value()) {
+		powerSM_->Shutdown();
 	}
 
 	// Always finalize connected hardware
-	if (m_connectedDeviceHandle.has_value()) {
+	if (connectedDeviceHandle_.has_value()) {
 		//"Disconnecting the device."
-		m_nanolibHelper.disconnectDevice(m_connectedDeviceHandle.value());
+		nanolibHelper_.disconnectDevice(connectedDeviceHandle_.value());
 	}
 
-	if (m_openedBusHardware.has_value()) {
+	if (openedBusHardware_.has_value()) {
 		//"Closing the hardware bus."
-		m_nanolibHelper.closeBusHardware(m_openedBusHardware.value());
+		nanolibHelper_.closeBusHardware(openedBusHardware_.value());
 	}
 }
 
 //***GENERALS***
 
-int Controller::checkConnection() {
-	if (!m_openedBusHardware.has_value() || !m_connectedDeviceHandle.has_value()) {
+int Controller::CheckConnection() {
+	if (!openedBusHardware_.has_value() || !connectedDeviceHandle_.has_value()) {
 		throw nanolib_exception("No connected device");
 		return EXIT_FAILURE;
 	}
-	if (m_nanolibHelper.checkedResult("getDeviceState", m_nanolibHelper->getConnectionState(*m_connectedDeviceHandle)).getResult() != nlc::DeviceConnectionStateInfo::Connected) {
+	if (nanolibHelper_.checkedResult("getDeviceState", nanolibHelper_->getConnectionState(*connectedDeviceHandle_)).getResult() != nlc::DeviceConnectionStateInfo::Connected) {
 		throw nanolib_exception("No connected device");
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::closePort() {
+int Controller::ClosePort() {
 	try {
-		checkConnection();
-		m_powerSM->disableOperation();
+		CheckConnection();
+		powerSM_->DisableOperation();
 
 		// Always finalize connected hardware
 
-		if (m_connectedDeviceHandle.has_value()) {
+		if (connectedDeviceHandle_.has_value()) {
 			//"Disconnecting the device."
-			m_nanolibHelper.disconnectDevice(*m_connectedDeviceHandle);
-			m_nanolibHelper.removeDevice(*m_connectedDeviceHandle);
-			m_connectedDeviceHandle.reset();
+			nanolibHelper_.disconnectDevice(*connectedDeviceHandle_);
+			nanolibHelper_.removeDevice(*connectedDeviceHandle_);
+			connectedDeviceHandle_.reset();
 		}
 
-		if (m_openedBusHardware.has_value()) {
+		if (openedBusHardware_.has_value()) {
 			//"Closing the hardware bus."
-			m_nanolibHelper.closeBusHardware(*m_openedBusHardware);
-			m_openedBusHardware.reset();
+			nanolibHelper_.closeBusHardware(*openedBusHardware_);
+			openedBusHardware_.reset();
 		}
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::rebootDevice() {
+int Controller::RebootDevice() {
 	try {
-		checkConnection();
-		m_nanolibHelper.checkedResult("rebootDevice", m_nanolibHelper->rebootDevice(*m_connectedDeviceHandle));
+		CheckConnection();
+		nanolibHelper_.checkedResult("rebootDevice", nanolibHelper_->rebootDevice(*connectedDeviceHandle_));
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::getDeviceFirmwareBuildId(std::string& version) {
+int Controller::GetDeviceFirmwareBuildId(std::string& version) {
 	try {
-		checkConnection();
-		version = m_nanolibHelper.checkedResult("getDeviceFirmwareBuildId", m_nanolibHelper->getDeviceFirmwareBuildId(*m_connectedDeviceHandle)).getResult();
+		CheckConnection();
+		version = nanolibHelper_.checkedResult("getDeviceFirmwareBuildId", nanolibHelper_->getDeviceFirmwareBuildId(*connectedDeviceHandle_)).getResult();
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
 
-int Controller::getExceptions(std::vector<std::string>& exceptions) {
-	for (auto e : m_exceptions)
+int Controller::GetExceptions(std::vector<std::string>& exceptions) {
+	for (auto e : exceptions_)
 		exceptions.push_back(e.what());
 	return EXIT_SUCCESS;
 }
 
-int Controller::getAvailablePorts(std::vector<std::string>& ports) {
+int Controller::GetAvailablePorts(std::vector<std::string>& ports) {
 	try {
+		ports.clear();
+
 		// list all hardware available
-		std::vector<nlc::BusHardwareId> busHardwareIds = m_nanolibHelper.getBusHardware();
+		std::vector<nlc::BusHardwareId> busHardwareIds = nanolibHelper_.getBusHardware();
 
 		if (busHardwareIds.empty()) {
 			// "No hardware buses found." << std::endl;
 			throw nanolib_exception("No bus found");
 		}
-
-		ports.clear();
 
 		int lineNum = 0;
 		// print out available hardware
@@ -139,22 +139,22 @@ int Controller::getAvailablePorts(std::vector<std::string>& ports) {
 	}
 
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::openPort(uint32_t portToOpen) {
+int Controller::OpenPort(uint32_t portToOpen) {
 	try {
-		if (m_openedBusHardware.has_value()) {
-			closePort();
+		if (openedBusHardware_.has_value()) {
+			ClosePort();
 		}
 		// its possible to set the logging level to a different level
-		m_nanolibHelper.setLoggingLevel(nlc::LogLevel::Error);
+		nanolibHelper_.setLoggingLevel(nlc::LogLevel::Error);
 
 		// list all hardware available
-		std::vector<nlc::BusHardwareId> busHardwareIds = m_nanolibHelper.getBusHardware();
+		std::vector<nlc::BusHardwareId> busHardwareIds = nanolibHelper_.getBusHardware();
 
 		if (busHardwareIds.empty()) {
 			return EXIT_FAILURE;
@@ -169,29 +169,29 @@ int Controller::openPort(uint32_t portToOpen) {
 		nlc::BusHardwareId busHwId = busHardwareIds[portToOpen];
 
 		// create bus hardware options for opening the hardware
-		nlc::BusHardwareOptions busHwOptions = m_nanolibHelper.createBusHardwareOptions(busHwId);
+		nlc::BusHardwareOptions busHwOptions = nanolibHelper_.createBusHardwareOptions(busHwId);
 		// now able to open the hardware itself
-		m_nanolibHelper.openBusHardware(busHwId, busHwOptions);
-		m_openedBusHardware = busHwId;
+		nanolibHelper_.openBusHardware(busHwId, busHwOptions);
+		openedBusHardware_ = busHwId;
 
 	}
 
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
 
-int Controller::scanBus(std::vector<std::string>& devices) {
+int Controller::ScanBus(std::vector<std::string>& devices) {
 	try {
-		if (!m_openedBusHardware.has_value()) {
+		if (!openedBusHardware_.has_value()) {
 			throw nanolib_exception("No Port opened");
 			return EXIT_FAILURE;
 		}
 		// Scan the bus for available devices
-		std::vector<nlc::DeviceId> deviceIds = m_nanolibHelper.scanBus(*m_openedBusHardware);
+		std::vector<nlc::DeviceId> deviceIds = nanolibHelper_.scanBus(*openedBusHardware_);
 
 		devices.clear();
 
@@ -202,23 +202,23 @@ int Controller::scanBus(std::vector<std::string>& devices) {
 		}
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::connectDevice(uint32_t deviceToOpen) {
+int Controller::ConnectDevice(uint32_t deviceToOpen) {
 	try {
-		if (!m_openedBusHardware.has_value()) {
+		if (!openedBusHardware_.has_value()) {
 			throw(nanolib_exception("can't connect: no port opened."));
 			return EXIT_FAILURE;
 		}
-		if (m_connectedDeviceHandle.has_value()) {
-			disconnectDevice();
+		if (connectedDeviceHandle_.has_value()) {
+			DisconnectDevice();
 		}
 
-		std::vector<nlc::DeviceId> deviceIds = m_nanolibHelper.scanBus(m_openedBusHardware.value());
+		std::vector<nlc::DeviceId> deviceIds = nanolibHelper_.scanBus(openedBusHardware_.value());
 		if (deviceToOpen >= deviceIds.size()) {
 			throw(nanolib_exception("Invalid bus hardware number."));
 			return EXIT_FAILURE;
@@ -226,114 +226,114 @@ int Controller::connectDevice(uint32_t deviceToOpen) {
 		nlc::DeviceHandle deviceHandle;
 		// Register the device id
 
-		deviceHandle = m_nanolibHelper.addDevice(deviceIds[deviceToOpen]);
+		deviceHandle = nanolibHelper_.addDevice(deviceIds[deviceToOpen]);
 
 		// Establishing a connection with the device
-		m_nanolibHelper.connectDevice(deviceHandle);
+		nanolibHelper_.connectDevice(deviceHandle);
 
-		m_connectedDeviceHandle = deviceHandle;
+		connectedDeviceHandle_ = deviceHandle;
 
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;
 }
 
-int Controller::disconnectDevice() {
+int Controller::DisconnectDevice() {
 	try {
-		checkConnection();
-		m_nanolibHelper.disconnectDevice(*m_connectedDeviceHandle);
-		m_nanolibHelper.removeDevice(*m_connectedDeviceHandle);
-		m_connectedDeviceHandle.reset();
+		CheckConnection();
+		nanolibHelper_.disconnectDevice(*connectedDeviceHandle_);
+		nanolibHelper_.removeDevice(*connectedDeviceHandle_);
+		connectedDeviceHandle_.reset();
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;
 }
 
-int Controller::setMotorParameters(uint32_t polePairCount, uint32_t ratedCurrent, uint32_t maxCurrent,uint32_t maxCurrentDuration, uint32_t idleCurrent, uint32_t driveMode) {
+int Controller::SetMotorParameters(uint32_t polePairCount, uint32_t ratedCurrent, uint32_t maxCurrent,uint32_t maxCurrentDuration, uint32_t idleCurrent, uint32_t driveMode) {
 	try {
-		checkConnection();
+		CheckConnection();
 		//take whichever motor for this
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		if (mot.setMotorParameters(polePairCount, ratedCurrent, maxCurrent, maxCurrentDuration,idleCurrent, static_cast<Motor402::DriveMode>(driveMode)))
+		Motor402 mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		if (mot.SetMotorParameters(polePairCount, ratedCurrent, maxCurrent, maxCurrentDuration,idleCurrent, static_cast<Motor402::DriveMode>(driveMode)))
 			return EXIT_FAILURE;
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::getMotorParameters(uint32_t& polePairCount, uint32_t& ratedCurrent, uint32_t& maxCurrent, uint32_t& maxCurrentTime, uint32_t &idleCurrent, uint32_t& driveMode) {
+int Controller::GetMotorParameters(uint32_t& polePairCount, uint32_t& ratedCurrent, uint32_t& maxCurrent, uint32_t& maxCurrentTime, uint32_t &idleCurrent, uint32_t& driveMode) {
 	try{ 
-		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
+		CheckConnection();
+		Motor402 mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
 		Motor402::DriveMode driveMode_t;
-		mot.getMotorParameters(polePairCount, ratedCurrent, maxCurrent, maxCurrentTime,idleCurrent, driveMode_t);
+		mot.GetMotorParameters(polePairCount, ratedCurrent, maxCurrent, maxCurrentTime,idleCurrent, driveMode_t);
 		driveMode = driveMode_t;
 	}
 	catch (nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::saveGroupMovement() {
+int Controller::SaveGroupMovement() {
 	try {
-		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.saveGroup(0x05);
+		CheckConnection();
+		Motor402 mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.SaveGroup(0x05);
 	}
 	catch (nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::saveGroupApplication() {
+int Controller::SaveGroupApplication() {
 	try {
-		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.saveGroup(0x03);
+		CheckConnection();
+		Motor402 mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.SaveGroup(0x03);
 	}
 	catch (nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::saveGroupTuning() {
+int Controller::SaveGroupTuning() {
 	try {
-		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.saveGroup(0x06);
+		CheckConnection();
+		Motor402 mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.SaveGroup(0x06);
 	}
 	catch (nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::halt() {
+int Controller::Halt() {
 	try {
-		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.halt();
+		CheckConnection();
+		Motor402 mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.Halt();
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
@@ -341,10 +341,10 @@ int Controller::halt() {
 
 
 
-int Controller::getDeviceErrorStack(std::vector<std::string>& errorStackStrings) {
+int Controller::GetDeviceErrorStack(std::vector<std::string>& errorStackStrings) {
 	try {
-		checkConnection();
-		std::vector<int64_t> errorStack = m_nanolibHelper.readArray(*m_connectedDeviceHandle, 0x1003);
+		CheckConnection();
+		std::vector<int64_t> errorStack = nanolibHelper_.readArray(*connectedDeviceHandle_, 0x1003);
 		uint8_t numberOfErrors = static_cast<uint8_t>(errorStack.at(0));
 		DBOUT("Elements in error stack: " << std::to_string(numberOfErrors).c_str() << std::endl);
 		for (size_t i = 1; i <= numberOfErrors; i++) {
@@ -356,7 +356,7 @@ int Controller::getDeviceErrorStack(std::vector<std::string>& errorStackStrings)
 		}
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 
@@ -365,67 +365,67 @@ int Controller::getDeviceErrorStack(std::vector<std::string>& errorStackStrings)
 
 }
 
-int Controller::quickStop() {
+int Controller::QuickStop() {
 	try {
-		checkConnection();
+		CheckConnection();
 		//quick stop
-		if (m_powerSM->quickStop())
+		if (powerSM_->QuickStop())
 			return EXIT_FAILURE;
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::getPositionActual(int32_t& position) {
+int Controller::GetPositionActual(int32_t& position) {
 	try {
-		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		position = mot.getPositionActual();
+		CheckConnection();
+		Motor402 mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		position = mot.GetPositionActual();
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;
 }
 
-int Controller::setUserUnitsFeed(uint32_t feedPer,uint32_t shaftRevolutions) {
+int Controller::SetUserUnitsFeed(uint32_t feedPer,uint32_t shaftRevolutions) {
 	try {
-		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.setUserUnitsFeed(feedPer,shaftRevolutions);
+		CheckConnection();
+		Motor402 mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.SetUserUnitsFeed(feedPer,shaftRevolutions);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::getUserUnitsFeed(uint32_t& feedPer,uint32_t &shaftRevolutions) {
+int Controller::GetUserUnitsFeed(uint32_t& feedPer,uint32_t &shaftRevolutions) {
 	try {
-		checkConnection();
-		feedPer = static_cast<uint32_t>(m_nanolibHelper.readInteger(*m_connectedDeviceHandle, nlc::OdIndex(0x6092, 0x01)));
-		shaftRevolutions = static_cast<uint32_t>(m_nanolibHelper.readInteger(*m_connectedDeviceHandle, nlc::OdIndex(0x6092, 0x02)));
+		CheckConnection();
+		feedPer = static_cast<uint32_t>(nanolibHelper_.readInteger(*connectedDeviceHandle_, nlc::OdIndex(0x6092, 0x01)));
+		shaftRevolutions = static_cast<uint32_t>(nanolibHelper_.readInteger(*connectedDeviceHandle_, nlc::OdIndex(0x6092, 0x02)));
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
-int Controller::getUserUnitsGearRatio(uint32_t& gearRatioMotorRevs,uint32_t& gearRatioShaftRevs) {
+int Controller::GetUserUnitsGearRatio(uint32_t& gearRatioMotorRevs,uint32_t& gearRatioShaftRevs) {
 	try {
-		checkConnection();
-		gearRatioMotorRevs = static_cast<uint32_t>(m_nanolibHelper.readInteger(*m_connectedDeviceHandle, nlc::OdIndex(0x6091, 0x01)));
-		gearRatioShaftRevs = static_cast<uint32_t>(m_nanolibHelper.readInteger(*m_connectedDeviceHandle, nlc::OdIndex(0x6091, 0x02)));
+		CheckConnection();
+		gearRatioMotorRevs = static_cast<uint32_t>(nanolibHelper_.readInteger(*connectedDeviceHandle_, nlc::OdIndex(0x6091, 0x01)));
+		gearRatioShaftRevs = static_cast<uint32_t>(nanolibHelper_.readInteger(*connectedDeviceHandle_, nlc::OdIndex(0x6091, 0x02)));
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 
@@ -433,75 +433,75 @@ int Controller::getUserUnitsGearRatio(uint32_t& gearRatioMotorRevs,uint32_t& gea
 }
 
 //read all 5 inputs
-int Controller::readDigitalInputs(uint8_t& states) {
+int Controller::ReadDigitalInputs(uint8_t& states) {
 	try {
-		checkConnection();
-		uint32_t uWord32 = static_cast<uint32_t>(m_nanolibHelper.readInteger(*m_connectedDeviceHandle, nlc::OdIndex(0x60FD, 0x00)));
+		CheckConnection();
+		uint32_t uWord32 = static_cast<uint32_t>(nanolibHelper_.readInteger(*connectedDeviceHandle_, nlc::OdIndex(0x60FD, 0x00)));
 		states = (uWord32 >> 16) & 0xFF;
 
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
 
-int Controller::configureInputs() {
+int Controller::ConfigureInputs() {
 	try {
-		checkConnection();
+		CheckConnection();
 		uint32_t uWord32 = 0;
 		//set digital inputs to range 24V
 		uWord32 |= (1UL << 0);
 		uWord32 |= (1UL << 1);
-		m_nanolibHelper.writeInteger(*m_connectedDeviceHandle, uWord32, nlc::OdIndex(0x3240, 0x06), 32);
+		nanolibHelper_.writeInteger(*connectedDeviceHandle_, uWord32, nlc::OdIndex(0x3240, 0x06), 32);
 
 		//set opener logic
-		m_nanolibHelper.writeInteger(*m_connectedDeviceHandle, uWord32, nlc::OdIndex(0x3240, 0x02), 32);
+		nanolibHelper_.writeInteger(*connectedDeviceHandle_, uWord32, nlc::OdIndex(0x3240, 0x02), 32);
 
 		//set input 1 to negative
 		//set input 2 to positive endswitch
-		m_nanolibHelper.writeInteger(*m_connectedDeviceHandle, uWord32, nlc::OdIndex(0x3240, 0x01), 32);
+		nanolibHelper_.writeInteger(*connectedDeviceHandle_, uWord32, nlc::OdIndex(0x3240, 0x01), 32);
 		//Limit Switch Error Option Code
 		/*
 		keine Reaktion (um z. B. eine Referenzfahrt durchzuführen), außer
 		Vermerken der Endschalterposition
 		*/
-		m_nanolibHelper.writeInteger(*m_connectedDeviceHandle, -1, nlc::OdIndex(0x3701, 0x00), 16);
+		nanolibHelper_.writeInteger(*connectedDeviceHandle_, -1, nlc::OdIndex(0x3701, 0x00), 16);
 
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::getModeOfOperation(std::string& mode) {
+int Controller::GetModeOfOperation(std::string& mode) {
 	try {
-		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		Motor402::OperationMode opMode=static_cast<Motor402::OperationMode>(mot.getModeOfOperation());
+		CheckConnection();
+		Motor402 mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		Motor402::OperationMode opMode=static_cast<Motor402::OperationMode>(mot.GetModeOfOperation());
 		auto enum_name = magic_enum::enum_name(opMode);
 		mode = enum_name;
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::getCiA402State(std::string& state, bool &fault,bool &voltageEnabled,bool &quickStop,bool &warning, bool &targetReached, bool &limitReached, bool &bit12, bool &bit13) {
+int Controller::GetCiA402State(std::string& state, bool &fault,bool &voltageEnabled,bool &quickStop,bool &warning, bool &targetReached, bool &limitReached, bool &bit12, bool &bit13) {
 	try {
-		checkConnection();
+		CheckConnection();
 		uint8_t opState;
-		if (m_powerSM->getCurrentState(opState))
+		if (powerSM_->GetCurrentState(opState))
 			return EXIT_FAILURE;
 		auto enum_name = magic_enum::enum_name(static_cast<PowerSM::States>(opState));
 		state = enum_name;
-		uint16_t uWord16 = static_cast<uint16_t>(m_nanolibHelper.readInteger(*m_connectedDeviceHandle, nlc::OdIndex(0x6041, 0x00)));
+		uint16_t uWord16 = static_cast<uint16_t>(nanolibHelper_.readInteger(*connectedDeviceHandle_, nlc::OdIndex(0x6041, 0x00)));
 		fault = uWord16 & (1U << 3);
 		voltageEnabled = uWord16 & (1U << 4);
 		quickStop = uWord16 & (1U << 5);
@@ -512,7 +512,7 @@ int Controller::getCiA402State(std::string& state, bool &fault,bool &voltageEnab
 		bit13 = uWord16 & (1U << 13);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
@@ -520,14 +520,14 @@ int Controller::getCiA402State(std::string& state, bool &fault,bool &voltageEnab
 
 //**AUTO-SETUP***
 
-int Controller::autoSetupMotPams() {
+int Controller::AutoSetupMotPams() {
 	try {
-		checkConnection();
-		AutoSetupMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.autoSetupMotPams();
+		CheckConnection();
+		AutoSetupMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.AutoSetupMotPams();
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
@@ -535,35 +535,35 @@ int Controller::autoSetupMotPams() {
 
 //***HOMING***
 
-int Controller::home(uint32_t speedZero, uint32_t speedSwitch) {
+int Controller::Home(uint32_t speedZero, uint32_t speedSwitch) {
 	try {
-		checkConnection();
+		CheckConnection();
 
 		//enable reference switches, set inputs to 24V range
-		if (configureInputs())
+		if (ConfigureInputs())
 			EXIT_FAILURE;
 
-		HomingMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
+		HomingMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
 		if (mot.home(speedZero, speedSwitch))
 			return EXIT_FAILURE;
 
 	}
 	catch (nanolib_exception e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
 
-int Controller::setHomingAcceleration(uint32_t acc) {
+int Controller::SetHomingAcceleration(uint32_t acc) {
 	try {
-		checkConnection();
-		HomingMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
+		CheckConnection();
+		HomingMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
 		mot.setHomingAcceleration(acc);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
@@ -572,93 +572,93 @@ int Controller::setHomingAcceleration(uint32_t acc) {
 //***POSITIONING***
 
 
-int Controller::setTargetPosition(int32_t value, uint32_t absRel) {
+int Controller::SetTargetPosition(int32_t value, uint32_t absRel) {
 	try {
-		checkConnection();
-		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
+		CheckConnection();
+		ProfilePositionMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
 		mot.setTargetPosition(value,absRel);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::setProfileAcceleration(uint32_t acc) {
+int Controller::SetProfileAcceleration(uint32_t acc) {
 	try {
-		checkConnection();
-		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
+		CheckConnection();
+		ProfilePositionMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
 		mot.setProfileAcceleration(acc);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::setProfileVelocity(uint32_t speed) {
+int Controller::SetProfileVelocity(uint32_t speed) {
 	try {
-		checkConnection();
-		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
+		CheckConnection();
+		ProfilePositionMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
 		mot.setProfileVelocity(speed);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::getPositioningParameters(uint32_t& profileVelocity, int32_t& targetPosition) {
+int Controller::GetPositioningParameters(uint32_t& profileVelocity, int32_t& targetPosition) {
 	try {
-		checkConnection();
-		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
+		CheckConnection();
+		ProfilePositionMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
 		mot.getPositioningParameters(profileVelocity, targetPosition);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::startPositioning() {
+int Controller::StartPositioning() {
 	try {
-		checkConnection();
-		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
+		CheckConnection();
+		ProfilePositionMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
 		mot.startPositioning();
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::getUserUnitsPositioning(uint32_t& unit, uint32_t& exp) {
+int Controller::GetUserUnitsPositioning(uint32_t& unit, uint32_t& exp) {
 	try {
-		checkConnection();
-		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
+		CheckConnection();
+		ProfilePositionMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
 		mot.getUserUnitsPositioning(unit,exp);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::setUserUnitsPositioning(uint32_t posUnit, uint32_t posExp) {
+int Controller::SetUserUnitsPositioning(uint32_t posUnit, uint32_t posExp) {
 	try {
-		checkConnection();
-		ProfilePositionMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
+		CheckConnection();
+		ProfilePositionMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
 		mot.setUserUnitsPositioning(posUnit, posExp);
 	}
 	catch (const nanolib_exception& e) {
 		DBOUT("exception: " << e.what());
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 
@@ -668,129 +668,129 @@ int Controller::setUserUnitsPositioning(uint32_t posUnit, uint32_t posExp) {
 
 //***VELOCITY***
 
-int Controller::setTargetVelocity(int16_t vel) {
+int Controller::SetTargetVelocity(int16_t vel) {
 	try {
-		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.setTargetVelocity(vel);
+		CheckConnection();
+		VelocityMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.SetTargetVelocity(vel);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::startVelocity() {
+int Controller::StartVelocity() {
 	try {
-		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.startVelocity();
+		CheckConnection();
+		VelocityMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.StartVelocity();
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
-int Controller::setVelocityAcceleration(uint32_t deltaSpeed, uint16_t deltaTime) {
+int Controller::SetVelocityAcceleration(uint32_t deltaSpeed, uint16_t deltaTime) {
 try {
-	checkConnection();
-	VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-	mot.setVelocityAcceleration(deltaSpeed,deltaTime );
+	CheckConnection();
+	VelocityMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+	mot.SetVelocityAcceleration(deltaSpeed,deltaTime );
 }
 catch (const nanolib_exception& e) {
-	m_exceptions.push_back(e);
+	exceptions_.push_back(e);
 	return EXIT_FAILURE;
 }
 return EXIT_SUCCESS;
 }
 
-int Controller::getVelocityDemanded(int16_t &velDemanded) {
+int Controller::GetVelocityDemanded(int16_t &velDemanded) {
 	try {
-		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.getVelocityDemanded(velDemanded);
+		CheckConnection();
+		Motor402 mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.GetVelocityDemanded(velDemanded);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::getVelocityActual(int16_t& velActual) {
+int Controller::GetVelocityActual(int16_t& velActual) {
 	try {
-		checkConnection();
-		Motor402 mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.getVelocityActual(velActual);
+		CheckConnection();
+		Motor402 mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.GetVelocityActual(velActual);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::setVelocityDeceleration(uint32_t deltaSpeed, uint16_t deltaTime) {
+int Controller::SetVelocityDeceleration(uint32_t deltaSpeed, uint16_t deltaTime) {
 	try {
-		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.setVelocityDeceleration(deltaSpeed, deltaTime);
+		CheckConnection();
+		VelocityMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.SetVelocityDeceleration(deltaSpeed, deltaTime);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
-int Controller::getTargetVelocity(int16_t& vel) {
+int Controller::GetTargetVelocity(int16_t& vel) {
 	try {
-		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.getTargetVelocity(vel);
+		CheckConnection();
+		VelocityMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.GetTargetVelocity(vel);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
-int Controller::getVelocityAcceleration(uint32_t& deltaSpeed, uint16_t& deltaTime){
+int Controller::GetVelocityAcceleration(uint32_t& deltaSpeed, uint16_t& deltaTime){
 	try {
-		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.getVelocityAcceleration(deltaSpeed,deltaTime);
+		CheckConnection();
+		VelocityMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.GetVelocityAcceleration(deltaSpeed,deltaTime);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
-int Controller::getVelocityDeceleration(uint32_t& deltaSpeed, uint16_t& deltaTime){
+int Controller::GetVelocityDeceleration(uint32_t& deltaSpeed, uint16_t& deltaTime){
 	try {
-		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.getVelocityDeceleration(deltaSpeed,deltaTime);
+		CheckConnection();
+		VelocityMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.GetVelocityDeceleration(deltaSpeed,deltaTime);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }
 
 
-int Controller::setUserUnitsVelocity(uint32_t velUnit, uint32_t velExp, uint32_t velTime) {
+int Controller::SetUserUnitsVelocity(uint32_t velUnit, uint32_t velExp, uint32_t velTime) {
 	try {
-		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.setUserUnitsVelocity(velUnit, velExp,velTime);
+		CheckConnection();
+		VelocityMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.SetUserUnitsVelocity(velUnit, velExp,velTime);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 
@@ -799,14 +799,14 @@ int Controller::setUserUnitsVelocity(uint32_t velUnit, uint32_t velExp, uint32_t
 
 
 
-int Controller::getUserUnitsVelocity(uint32_t &unit, uint32_t& exp, uint32_t& time) {
+int Controller::GetUserUnitsVelocity(uint32_t &unit, uint32_t& exp, uint32_t& time) {
 	try {
-		checkConnection();
-		VelocityMotor mot(&m_nanolibHelper, &m_connectedDeviceHandle, &(*m_powerSM));
-		mot.getUserUnitsVelocity(unit,exp, time);
+		CheckConnection();
+		VelocityMotor mot(&nanolibHelper_, &connectedDeviceHandle_, &(*powerSM_));
+		mot.GetUserUnitsVelocity(unit,exp, time);
 	}
 	catch (const nanolib_exception& e) {
-		m_exceptions.push_back(e);
+		exceptions_.push_back(e);
 		return EXIT_FAILURE;
 	}
 

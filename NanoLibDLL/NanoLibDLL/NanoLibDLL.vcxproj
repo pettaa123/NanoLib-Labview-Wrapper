@@ -82,7 +82,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)build\NanoLibDLL\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -173,35 +173,32 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>$(SolutionDir)\NanoLibDLL\Nanolib;C:\Program Files\National Instruments\LabVIEW 2022\cintools;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\NanoLibDLL\Nanolib;C:\Program Files\National Instruments\LabVIEW 2023\cintools;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>nanolib.lib;labview.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="autoSetupMotor.h" />
+    <ClInclude Include="auto_setup_motor.h" />
     <ClInclude Include="controller.h" />
-    <ClInclude Include="profileVelocityMotor.h" />
-    <ClInclude Include="homingMotor.h" />
+    <ClInclude Include="profile_velocity_motor.h" />
+    <ClInclude Include="homing_motor.h" />
     <ClInclude Include="motor.h" />
     <ClInclude Include="nanolibwrapper.h" />
     <ClInclude Include="nanolib_helper.hpp" />
-    <ClInclude Include="powerSM.h" />
-    <ClInclude Include="profilePositionMotor.h" />
-    <ClInclude Include="userUnits.h" />
-    <ClInclude Include="velocityMotor.h" />
+    <ClInclude Include="power_sm.h" />
+    <ClInclude Include="profile_position_motor.h" />
+    <ClInclude Include="user_units.h" />
+    <ClInclude Include="velocity_motor.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="autoSetupMotor.cpp" />
+    <ClCompile Include="auto_setup_motor.cpp" />
     <ClCompile Include="controller.cpp" />
     <ClCompile Include="motor.cpp" />
     <ClCompile Include="nanolibwrapper.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="nanolib_helper.cpp" />
-    <ClCompile Include="powerSM.cpp" />
-    <ClCompile Include="userUnits.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram.cd" />
+    <ClCompile Include="power_sm.cpp" />
+    <ClCompile Include="user_units.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

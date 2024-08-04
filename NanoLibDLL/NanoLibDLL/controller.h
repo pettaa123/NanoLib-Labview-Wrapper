@@ -5,10 +5,10 @@
 
 #include "nanolib_helper.hpp"
 
-#include "autoSetupMotor.h"
-#include "homingMotor.h"
-#include "profilePositionMotor.h"
-#include "velocityMotor.h"
+#include "auto_setup_motor.h"
+#include "homing_motor.h"
+#include "profile_position_motor.h"
+#include "velocity_motor.h"
 
 
 class Controller {
@@ -22,74 +22,74 @@ public:
 	~Controller();
 
 	//***GENERAL***
-	int quickStop();
-	int halt();
-	int rebootDevice();
-	int getDeviceFirmwareBuildId(std::string& ver);
-	int getAvailablePorts(std::vector<std::string>& ports);
-	int closePort();
-	int getDeviceErrorStack(std::vector<std::string>& errorStack);
+	int QuickStop();
+	int Halt();
+	int RebootDevice();
+	int GetDeviceFirmwareBuildId(std::string& ver);
+	int GetAvailablePorts(std::vector<std::string>& ports);
+	int ClosePort();
+	int GetDeviceErrorStack(std::vector<std::string>& errorStack);
 
 
 	//exceptions thrown from nanolib
-	int getExceptions(std::vector<std::string>& exceptions);
+	int GetExceptions(std::vector<std::string>& exceptions);
 
-	int openPort(uint32_t portToOpen);
-	int connectDevice(uint32_t deviceToOpen);
-	int disconnectDevice();
-	int scanBus(std::vector<std::string>& devices);
+	int OpenPort(uint32_t portToOpen);
+	int ConnectDevice(uint32_t deviceToOpen);
+	int DisconnectDevice();
+	int ScanBus(std::vector<std::string>& devices);
 
-	int configureInputs();
+	int ConfigureInputs();
 
-	int getModeOfOperation(std::string& mode);
+	int GetModeOfOperation(std::string& mode);
 
-	int getCiA402State(std::string& state, bool& fault, bool& voltageEnabled, bool& quickStop, bool& warning, bool& targetReached, bool& limitReached, bool& bit12, bool& bit13);
+	int GetCiA402State(std::string& state, bool& fault, bool& voltageEnabled, bool& quickStop, bool& warning, bool& targetReached, bool& limitReached, bool& bit12, bool& bit13);
 
 	//motor specific
-	int setMotorParameters(uint32_t polePairCount, uint32_t ratedCurrent, uint32_t maxCurrent, uint32_t maxCurrentDuration,uint32_t openLoopIdleCurrent, uint32_t driveMode);
-	int getMotorParameters(uint32_t &polePairCount, uint32_t &ratedCurrent, uint32_t &maxCurrent, uint32_t &maxCurrentDuration, uint32_t& openLoopIdleCurrent, uint32_t &driveMode);
-	int saveGroupMovement();
-	int saveGroupApplication();
-	int saveGroupTuning();
-	int autoSetupMotPams();
+	int SetMotorParameters(uint32_t polePairCount, uint32_t ratedCurrent, uint32_t maxCurrent, uint32_t maxCurrentDuration,uint32_t openLoopIdleCurrent, uint32_t driveMode);
+	int GetMotorParameters(uint32_t &polePairCount, uint32_t &ratedCurrent, uint32_t &maxCurrent, uint32_t &maxCurrentDuration, uint32_t& openLoopIdleCurrent, uint32_t &driveMode);
+	int SaveGroupMovement();
+	int SaveGroupApplication();
+	int SaveGroupTuning();
+	int AutoSetupMotPams();
 
 	//***HOMING***
-	int home(uint32_t speedZeroUserUnit = 10, uint32_t speedSwitchUserUnit = 50);
+	int Home(uint32_t speedZeroUserUnit = 10, uint32_t speedSwitchUserUnit = 50);
 
 	//***POSITIONING***
-	int startPositioning();
-	int setTargetPosition(int32_t val, uint32_t absRel);
+	int StartPositioning();
+	int SetTargetPosition(int32_t val, uint32_t absRel);
 	//The current actual position in user - defined units.
-	int getPositionActual(int32_t& val);
-	int setProfileVelocity(uint32_t speed);
-	int getPositioningParameters(uint32_t &profileVelocity, int32_t &targetPosition);
+	int GetPositionActual(int32_t& val);
+	int SetProfileVelocity(uint32_t speed);
+	int GetPositioningParameters(uint32_t &profileVelocity, int32_t &targetPosition);
 
 	//***VELOCITY***
-	int startVelocity();
-	int setTargetVelocity(int16_t vel);
-	int setVelocityAcceleration(uint32_t deltaSpeed, uint16_t deltaTime);
-	int setVelocityDeceleration(uint32_t deltaSpeed, uint16_t deltaTime);
-	int getTargetVelocity(int16_t &vel);
-	int getVelocityAcceleration(uint32_t &deltaSpeed, uint16_t &deltaTime);
-	int getVelocityDeceleration(uint32_t &deltaSpeed, uint16_t &deltaTime);
-	int getVelocityDemanded(int16_t &demandedSpeed);
-	int getVelocityActual(int16_t &velActual);
+	int StartVelocity();
+	int SetTargetVelocity(int16_t vel);
+	int SetVelocityAcceleration(uint32_t deltaSpeed, uint16_t deltaTime);
+	int SetVelocityDeceleration(uint32_t deltaSpeed, uint16_t deltaTime);
+	int GetTargetVelocity(int16_t &vel);
+	int GetVelocityAcceleration(uint32_t &deltaSpeed, uint16_t &deltaTime);
+	int GetVelocityDeceleration(uint32_t &deltaSpeed, uint16_t &deltaTime);
+	int GetVelocityDemanded(int16_t &demandedSpeed);
+	int GetVelocityActual(int16_t &velActual);
 
 	//getter user defined units
-	int getUserUnitsPositioning(uint32_t &unit, uint32_t &exp);
-	int getUserUnitsVelocity(uint32_t& unit, uint32_t &exp, uint32_t &time );
-	int getUserUnitsFeed(uint32_t& feed, uint32_t& shaftsRevolutions);
-	int getUserUnitsGearRatio(uint32_t& gearRatioMotorRevs, uint32_t& gearRatioShaftRevs);
+	int GetUserUnitsPositioning(uint32_t &unit, uint32_t &exp);
+	int GetUserUnitsVelocity(uint32_t& unit, uint32_t &exp, uint32_t &time );
+	int GetUserUnitsFeed(uint32_t& feed, uint32_t& shaftsRevolutions);
+	int GetUserUnitsGearRatio(uint32_t& gearRatioMotorRevs, uint32_t& gearRatioShaftRevs);
 
 	//spindelsteigung 
-	int setUserUnitsFeed(uint32_t feed, uint32_t shaftsRevolutions);
-	int setProfileAcceleration(uint32_t acc);
-	int setHomingAcceleration(uint32_t acc);
+	int SetUserUnitsFeed(uint32_t feed, uint32_t shaftsRevolutions);
+	int SetProfileAcceleration(uint32_t acc);
+	int SetHomingAcceleration(uint32_t acc);
 
-	int setUserUnitsPositioning(uint32_t unit, uint32_t exp);
-	int setUserUnitsVelocity(uint32_t velUnit, uint32_t exp, uint32_t time);
+	int SetUserUnitsPositioning(uint32_t unit, uint32_t exp);
+	int SetUserUnitsVelocity(uint32_t velUnit, uint32_t exp, uint32_t time);
 
-	static Controller* getInstance()
+	static Controller* GetInstance()
 	{
 		static Controller instance;	
 		return &instance;
@@ -100,19 +100,19 @@ private:
 
 	Controller();
 
-	static Controller* m_instancePtr;
+	static Controller* instancePtr_;
 
-	std::unique_ptr<PowerSM> m_powerSM;
+	std::unique_ptr<PowerSM> powerSM_;
 
-	NanoLibHelper m_nanolibHelper;
-	std::optional<nlc::BusHardwareId> m_openedBusHardware;
-	std::optional<nlc::DeviceHandle> m_connectedDeviceHandle;
+	NanoLibHelper nanolibHelper_;
+	std::optional<nlc::BusHardwareId> openedBusHardware_;
+	std::optional<nlc::DeviceHandle> connectedDeviceHandle_;
 
-	std::vector<nanolib_exception> m_exceptions;
+	std::vector<nanolib_exception> exceptions_;
 
-	int checkConnection();
+	int CheckConnection();
 
-	int readDigitalInputs(uint8_t& states);
+	int ReadDigitalInputs(uint8_t& states);
 
 };
 

@@ -3,8 +3,8 @@
 #include <cstdint>
 
 #include "nanolib_helper.hpp"
-#include "powerSM.h"
-#include "userUnits.h"
+#include "power_sm.h"
+#include "user_units.h"
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #include <Windows.h>
@@ -53,33 +53,33 @@ public:
 	};
 
 	//works for modes: ProfilePosition,Velocity,Profile Velocity,Profile Torque,Interpolated Mode
-	virtual int halt();
+	virtual int Halt();
 
 	//actual velocity in user defined units
-	int32_t getSpeedActual();
+	int32_t GetSpeedActual();
 	//actual position in user defined units
-	int32_t getPositionActual();
-	void setMaxMotorSpeed(uint32_t maxSpeed);
+	int32_t GetPositionActual();
+	void SetMaxMotorSpeed(uint32_t maxSpeed);
 
 	//pams in mA and ms
-	int setMotorParameters(uint32_t polePairCount, uint32_t ratedCurrent, uint32_t maxCurrent, uint32_t maxCurrentDuration, uint32_t idleCurrent, DriveMode driveMode);
-	void getMotorParameters(uint32_t& polePairCount, uint32_t& ratedCurrent, uint32_t& maxCurrent, uint32_t& maxCurrentDuration, uint32_t& idleCurrent, DriveMode& driveMode);
-	int saveGroup(uint8_t group);
-	int setModeOfOperation(int8_t mode);
-	int8_t getModeOfOperation();
+	int SetMotorParameters(uint32_t polePairCount, uint32_t ratedCurrent, uint32_t maxCurrent, uint32_t maxCurrentDuration, uint32_t idleCurrent, DriveMode driveMode);
+	void GetMotorParameters(uint32_t& polePairCount, uint32_t& ratedCurrent, uint32_t& maxCurrent, uint32_t& maxCurrentDuration, uint32_t& idleCurrent, DriveMode& driveMode);
+	int SaveGroup(uint8_t group);
+	int SetModeOfOperation(int8_t mode);
+	int8_t GetModeOfOperation();
 
 	//general user units
-	int setUserUnitsFeed(uint32_t feedPer, uint32_t shaftRevolutions);
+	int SetUserUnitsFeed(uint32_t feedPer, uint32_t shaftRevolutions);
 
-	inline void getVelocityDemanded(int16_t& demandedVel) {demandedVel = static_cast<int16_t>(m_nanolibHelper->readInteger(m_connectedDeviceHandle->value(), nlc::OdIndex(0x6043, 0x00)));}
-	inline void getVelocityActual(int16_t& velActual) {velActual = static_cast<int16_t>(m_nanolibHelper->readInteger(m_connectedDeviceHandle->value(), nlc::OdIndex(0x6044, 0x00)));}
+	inline void GetVelocityDemanded(int16_t& demandedVel) {demandedVel = static_cast<int16_t>(nanolibHelper_->readInteger(connectedDeviceHandle_->value(), nlc::OdIndex(0x6043, 0x00)));}
+	inline void GetVelocityActual(int16_t& velActual) {velActual = static_cast<int16_t>(nanolibHelper_->readInteger(connectedDeviceHandle_->value(), nlc::OdIndex(0x6044, 0x00)));}
 
 protected:
 
-	NanoLibHelper *m_nanolibHelper;
-	std::optional<nlc::DeviceHandle> *m_connectedDeviceHandle;
+	NanoLibHelper* nanolibHelper_;
+	std::optional<nlc::DeviceHandle>* connectedDeviceHandle_;
 
-	PowerSM *m_powerSM;
+	PowerSM* powerSM_;
 
 
 
